@@ -1,4 +1,5 @@
 const STORAGE_KEY = "agency-command-center-v1";
+const THEME_KEY = "agency-command-center-theme";
 
 const statuses = [
   ["potentieel", "Potentiële klanten"],
@@ -71,6 +72,8 @@ let priorityFilter = "all";
 const routes = ["dashboard", "pipeline", "clients", "analytics", "agenda", "tasks", "research"];
 let agendaRange = "week";
 let taskMode = "status";
+const urlTheme = new URLSearchParams(location.search).get("theme") || location.href.match(/[?&]theme=(auto|light|dark)\b/)?.[1];
+let themeMode = ["auto", "light", "dark"].includes(urlTheme) ? urlTheme : localStorage.getItem(THEME_KEY) || "light";
 const CALL_TARGET_WEEK = 60;
 const cityPositions = {
   leuven: { x: 37, y: 70 },
@@ -146,6 +149,19 @@ function setRoute(next, updateHash = true) {
     research: "Workflow"
   }[next];
   render();
+}
+
+function resolvedTheme(mode = themeMode) {
+  if (mode === "auto") return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return mode;
+}
+
+function applyTheme(mode = themeMode) {
+  themeMode = mode;
+  localStorage.setItem(THEME_KEY, mode);
+  document.documentElement.dataset.theme = resolvedTheme(mode);
+  document.documentElement.dataset.themeMode = mode;
+  $$("#themeControls button").forEach((button) => button.classList.toggle("active", button.dataset.themeMode === mode));
 }
 
 function render() {
@@ -279,15 +295,22 @@ function taskHtml(task) {
   return `
     <article class="task-row ${task.status}">
       <div class="row-top">
-        <div><strong>${task.title}</strong><div class="muted">${client?.name || "Onbekend"} • ${task.type} • ${task.owner}</div></div>
+        <div>
+          <strong class="task-client">${client?.name || "Onbekend"}</strong>
+          <div class="task-title">${task.title}</div>
+          <div class="task-meta">${ownerBadge(task.owner)}<span>${task.type}</span><span>Deadline ${niceDate(task.due)}</span></div>
+        </div>
         <span class="pill ${task.priority}">${task.priority}</span>
       </div>
-      <div class="muted">Deadline ${niceDate(task.due)} • status ${task.status}</div>
       <div class="task-actions">
-        <button data-task-status="${task.id}" data-status="open">Open</button>
-        <button data-task-status="${task.id}" data-status="doing">Mee bezig</button>
-        <button data-task-status="${task.id}" data-status="done">Klaar</button>
-        <button data-delete-task="${task.id}">Delete</button>
+        <div>
+          <button data-task-status="${task.id}" data-status="open">Open</button>
+          <button data-task-status="${task.id}" data-status="doing">Mee bezig</button>
+        </div>
+        <div class="task-actions-right">
+          <button data-task-status="${task.id}" data-status="done">Klaar</button>
+          <button class="danger-btn" data-delete-task="${task.id}">Delete</button>
+        </div>
       </div>
     </article>
   `;
@@ -336,14 +359,14 @@ function inAgendaRange(dateString, range) {
 
 function agendaSummaryHtml(events) {
   const owners = countBy(events, "owner");
-  const ownerLine = Object.entries(owners).map(([owner, count]) => `${owner}: ${count}`).join(" • ") || "Geen eigenaar";
+  const ownerLine = Object.entries(owners).map(([owner, count]) => ownerBadge(owner, count)).join("") || `<span class="muted">Geen eigenaar</span>`;
   const clientCount = new Set(events.map((event) => event.clientId).filter((id) => id !== "none")).size;
   const loose = events.filter((event) => event.clientId === "none").length;
   return `
     <article><strong>${events.length}</strong><span>Afspraken</span></article>
     <article><strong>${clientCount}</strong><span>Klanten</span></article>
     <article><strong>${loose}</strong><span>Nog geen klant</span></article>
-    <article class="wide"><strong>${ownerLine}</strong><span>Verdeling</span></article>
+    <article class="wide"><div class="owner-stack">${ownerLine}</div><span>Verdeling</span></article>
   `;
 }
 
@@ -388,7 +411,7 @@ function dayCard(date, label, events) {
     <article class="calendar-card ${dayEvents.length ? "has-events" : ""}">
       <strong>${label}</strong>
       <span>${dayEvents.length} afspraken</span>
-      ${dayEvents.slice(0, 3).map((event) => `<em>${event.time} ${event.title}</em>`).join("")}
+      ${dayEvents.slice(0, 3).map((event) => `<em class="${ownerClass(event.owner)}">${event.time} ${event.title}</em>`).join("")}
     </article>
   `;
 }
@@ -403,7 +426,7 @@ function monthCard(bucket, events) {
     <article class="calendar-card month-card ${monthEvents.length ? "has-events" : ""}">
       <strong>${bucket.label}</strong>
       <span>${monthEvents.length} afspraken • ${clientCount} klanten</span>
-      ${monthEvents.slice(0, 4).map((event) => `<em>${niceDate(event.date)} ${event.time} ${event.title}</em>`).join("")}
+      ${monthEvents.slice(0, 4).map((event) => `<em class="${ownerClass(event.owner)}">${niceDate(event.date)} ${event.time} ${event.title}</em>`).join("")}
     </article>
   `;
 }
@@ -412,11 +435,22 @@ function eventHtml(event) {
   const client = clientById(event.clientId);
   return `
     <article class="agenda-row meeting">
-      <div class="row-top"><strong>${event.title}</strong><span class="pill">${event.owner}</span></div>
+      <div class="row-top"><strong>${event.title}</strong>${ownerBadge(event.owner)}</div>
       <div class="muted">${niceDate(event.date)} om ${event.time} • ${event.type} • ${client?.name || "Onbekend"}</div>
       <div class="task-actions"><button data-delete-event="${event.id}">Delete</button></div>
     </article>
   `;
+}
+
+function ownerClass(owner = "") {
+  const key = owner.toLowerCase();
+  if (key.includes("emilio")) return "owner-emilio";
+  if (key.includes("ayman")) return "owner-ayman";
+  return "owner-both";
+}
+
+function ownerBadge(owner = "Onbekend", count = null) {
+  return `<span class="owner-badge ${ownerClass(owner)}">${owner}${count === null ? "" : `: ${count}`}</span>`;
 }
 
 function statusLabel(key) {
@@ -804,6 +838,11 @@ document.addEventListener("click", (event) => {
     $$("#taskModeControls button").forEach((button) => button.classList.toggle("active", button === taskModeButton));
     renderTasks();
   }
+
+  const themeButton = event.target.closest("[data-theme-mode]");
+  if (themeButton) {
+    applyTheme(themeButton.dataset.themeMode);
+  }
 });
 
 $("#globalSearch").addEventListener("input", (event) => {
@@ -892,7 +931,12 @@ $("#resetDemoBtn").addEventListener("click", () => {
   render();
 });
 
+applyTheme(themeMode);
 render();
+
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  if (themeMode === "auto") applyTheme("auto");
+});
 
 window.addEventListener("hashchange", () => {
   const next = location.hash.slice(1);

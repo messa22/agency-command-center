@@ -362,11 +362,77 @@ td { font-size: 14px; }
 
 .task-row.doing { border-color: rgba(255,209,102,.35); }
 .task-row.done { opacity: .6; }
+.task-client {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 17px;
+}
+.task-title {
+  color: var(--ink);
+  font-weight: 750;
+  line-height: 1.35;
+}
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
 .task-actions {
   margin-top: 10px;
   display: flex;
+  justify-content: space-between;
   gap: 6px;
   flex-wrap: wrap;
+}
+.task-actions > div {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.task-actions-right {
+  margin-left: auto;
+}
+.task-actions button.danger-btn {
+  border-color: rgba(229,72,93,.22);
+  background: rgba(229,72,93,.08);
+  color: #b72c43;
+}
+.owner-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.owner-emilio {
+  background: #7b1f3a;
+}
+.owner-ayman {
+  background: #2563eb;
+}
+.owner-both {
+  background: linear-gradient(135deg, #7b1f3a, #2563eb);
+}
+.owner-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 3px 0 9px;
+}
+.agenda-summary .owner-badge,
+.task-meta .owner-badge,
+.agenda-row .owner-badge,
+.meeting .owner-badge {
+  color: #fff;
 }
 
 .segmented {
@@ -376,6 +442,12 @@ td { font-size: 14px; }
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #edf2f8;
+}
+.theme-switch {
+  flex: 0 0 auto;
+}
+.theme-switch button {
+  min-width: 58px;
 }
 .segmented button {
   min-height: 34px;
@@ -475,6 +547,14 @@ td { font-size: 14px; }
   border-radius: 10px;
   background: rgba(37,94,247,.07);
 }
+.calendar-card em.owner-emilio,
+.calendar-card em.owner-ayman,
+.calendar-card em.owner-both {
+  color: #fff;
+}
+.calendar-card em.owner-emilio { background: #7b1f3a; }
+.calendar-card em.owner-ayman { background: #2563eb; }
+.calendar-card em.owner-both { background: linear-gradient(135deg, #7b1f3a, #2563eb); }
 .subhead {
   margin: 6px 0 12px;
   font-size: 15px;
@@ -854,6 +934,110 @@ td { font-size: 14px; }
   margin-top: 10px;
   color: var(--muted);
   line-height: 1.55;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1117;
+  --panel: #171a22;
+  --panel-2: #202532;
+  --ink: #f4f7fb;
+  --muted: #9aa4b5;
+  --line: rgba(255,255,255,.11);
+  --blue: #4c8dff;
+  --cyan: #20c7b5;
+}
+:root[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 16% 0%, rgba(76,141,255,.18), transparent 32%),
+    radial-gradient(circle at 92% 12%, rgba(32,199,181,.12), transparent 30%),
+    linear-gradient(180deg, #0f1117 0%, #121722 44%, #0e1118 100%);
+}
+:root[data-theme="dark"] .sidebar,
+:root[data-theme="dark"] .topbar {
+  background: rgba(18,21,29,.82);
+}
+:root[data-theme="dark"] .storage-card,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .metric,
+:root[data-theme="dark"] .action,
+:root[data-theme="dark"] .meeting,
+:root[data-theme="dark"] .health-row,
+:root[data-theme="dark"] .task-row,
+:root[data-theme="dark"] .agenda-row,
+:root[data-theme="dark"] .client-card,
+:root[data-theme="dark"] .bar-row,
+:root[data-theme="dark"] .route-stop,
+:root[data-theme="dark"] .insight,
+:root[data-theme="dark"] .calendar-card,
+:root[data-theme="dark"] .agenda-summary article,
+:root[data-theme="dark"] .task-summary article,
+:root[data-theme="dark"] .workflow-grid article,
+:root[data-theme="dark"] .ai-box,
+:root[data-theme="dark"] .bar-stack,
+:root[data-theme="dark"] .progress-card,
+:root[data-theme="dark"] .pulse-grid article,
+:root[data-theme="dark"] .call-row,
+:root[data-theme="dark"] .efficiency-row,
+:root[data-theme="dark"] dialog {
+  background: linear-gradient(180deg, #1a1e28, #141821);
+  box-shadow: 0 18px 46px rgba(0,0,0,.22);
+}
+:root[data-theme="dark"] .pipeline-col,
+:root[data-theme="dark"] .task-col {
+  background: rgba(255,255,255,.035);
+}
+:root[data-theme="dark"] .search,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] .ghost,
+:root[data-theme="dark"] .storage-card button,
+:root[data-theme="dark"] .import-label,
+:root[data-theme="dark"] .card-actions button,
+:root[data-theme="dark"] .task-actions button,
+:root[data-theme="dark"] .segmented,
+:root[data-theme="dark"] .pill {
+  background: #202532;
+  color: var(--ink);
+}
+:root[data-theme="dark"] .side-nav button.active,
+:root[data-theme="dark"] .side-nav button:hover {
+  background: rgba(76,141,255,.18);
+}
+:root[data-theme="dark"] .segmented button.active,
+:root[data-theme="dark"] .primary {
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  color: #fff;
+}
+:root[data-theme="dark"] .calendar-card.has-events,
+:root[data-theme="dark"] .agenda-summary article.wide,
+:root[data-theme="dark"] .task-summary article:last-child,
+:root[data-theme="dark"] .efficiency-row.warning {
+  background: linear-gradient(180deg, #202433, #171b26);
+}
+:root[data-theme="dark"] .calendar-card em,
+:root[data-theme="dark"] .progress-card > i,
+:root[data-theme="dark"] .efficiency-row > i {
+  background: rgba(76,141,255,.12);
+}
+:root[data-theme="dark"] .task-actions button.danger-btn {
+  background: rgba(229,72,93,.15);
+  color: #ff98a7;
+}
+:root[data-theme="dark"] .map-surface {
+  background:
+    radial-gradient(circle at 37% 70%, rgba(76,141,255,.2), transparent 8%),
+    radial-gradient(circle at 58% 45%, rgba(32,199,181,.17), transparent 9%),
+    linear-gradient(135deg, #171b25, #10141d);
+}
+:root[data-theme="dark"] .map-surface::before {
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+}
+:root[data-theme="dark"] .map-label,
+:root[data-theme="dark"] .map-pin {
+  background: rgba(26,30,40,.94);
 }
 
 dialog {
