@@ -16,14 +16,15 @@
       <span>AC</span>
       <strong>Agency<br>Command</strong>
     </a>
+    <button class="collapse-btn" id="collapseSidebarBtn" type="button">Inklappen</button>
     <nav class="side-nav">
-      <button class="active" data-route="dashboard">Dashboard</button>
-      <button data-route="pipeline">Pipeline</button>
-      <button data-route="clients">Klanten</button>
-      <button data-route="analytics">Analytics</button>
-      <button data-route="agenda">Agenda</button>
-      <button data-route="tasks">Taken</button>
-      <button data-route="research">Workflow</button>
+      <button class="active" data-route="dashboard" data-short="D">Dashboard</button>
+      <button data-route="pipeline" data-short="P">Pipeline</button>
+      <button data-route="clients" data-short="K">Klanten</button>
+      <button data-route="analytics" data-short="A">Analytics</button>
+      <button data-route="agenda" data-short="G">Agenda</button>
+      <button data-route="tasks" data-short="T">Taken</button>
+      <button data-route="research" data-short="W">Workflow</button>
     </nav>
     <div class="storage-card">
       <strong>Opslag</strong>
@@ -59,37 +60,25 @@
 
     <main>
       <section id="dashboardView" class="view active">
-        <div class="metric-grid" id="metrics"></div>
-        <div class="dashboard-grid">
-          <section class="panel large">
-            <div class="panel-head">
-              <div>
-                <p class="mini">Vandaag eerst</p>
-                <h2>Actielijst</h2>
-              </div>
-              <button class="link-btn" data-route="tasks">Alle taken</button>
-            </div>
-            <div id="todayActions" class="action-list"></div>
-          </section>
-          <section class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="mini">Agenda</p>
-                <h2>Volgende afspraken</h2>
-              </div>
-              <button class="link-btn" data-route="agenda">Open agenda</button>
-            </div>
-            <div id="nextMeetings" class="meeting-list"></div>
-          </section>
-        </div>
-        <section class="panel">
+        <div class="metric-grid compact-metrics" id="metrics"></div>
+        <section class="panel dashboard-charts">
           <div class="panel-head">
             <div>
-              <p class="mini">Pipeline gezondheid</p>
-              <h2>Waar zit geld vast?</h2>
+              <p class="mini">Resultaten</p>
+              <h2>Groei dashboard</h2>
+            </div>
+            <div class="segmented" id="dashboardRangeControls">
+              <button data-dashboard-range="3">3M</button>
+              <button class="active" data-dashboard-range="6">6M</button>
+              <button data-dashboard-range="12">12M</button>
             </div>
           </div>
-          <div id="healthRows" class="health-list"></div>
+          <div class="dashboard-chart-grid">
+            <article class="line-card"><div><p class="mini">Omzet</p><h2>Verdienen we meer?</h2></div><div id="dashboardRevenueChart" class="line-chart"></div></article>
+            <article class="line-card"><div><p class="mini">Passief inkomen</p><h2>Maandelijkse inkomsten</h2></div><div id="dashboardPassiveChart" class="line-chart"></div></article>
+            <article class="line-card"><div><p class="mini">Nieuwe potentiële klanten</p><h2>Leadgeneratie</h2></div><div id="dashboardLeadsChart" class="line-chart"></div></article>
+            <article class="line-card"><div><p class="mini">Closing rate</p><h2>Sluiten we beter?</h2></div><div id="dashboardCloseChart" class="line-chart"></div></article>
+          </div>
         </section>
       </section>
 
@@ -99,12 +88,6 @@
             <option value="all">Iedereen</option>
             <option>Emilio</option>
             <option>Ayman</option>
-          </select>
-          <select id="priorityFilter">
-            <option value="all">Alle prioriteiten</option>
-            <option value="hoog">Hoog</option>
-            <option value="normaal">Normaal</option>
-            <option value="laag">Laag</option>
           </select>
           <button class="ghost" id="clearFilters">Filters wissen</button>
         </div>
@@ -281,7 +264,7 @@
 
       <section id="agendaView" class="view">
         <div class="agenda-layout">
-          <section class="panel">
+          <section class="panel agenda-main-panel">
             <div class="panel-head">
               <div>
                 <p class="mini">Gedeelde planning</p>
@@ -294,22 +277,21 @@
                 <button data-agenda-range="year">Jaar</button>
               </div>
             </div>
-            <div id="agendaSummary" class="agenda-summary"></div>
             <div id="calendarOverview" class="calendar-overview"></div>
-            <h3 class="subhead">Afsprakenlijst</h3>
-            <div id="agendaList" class="agenda-list"></div>
           </section>
           <section class="panel sticky-panel">
-            <p class="mini">Nieuwe afspraak</p>
-            <form id="eventForm" class="stack-form">
-              <label>Klant<select name="clientId" id="eventClient"></select></label>
-              <label>Titel<input name="title" placeholder="Afspraak, TikToks filmen, menu vragen..." required></label>
-              <label>Datum<input name="date" type="date" required></label>
-              <label>Tijd<input name="time" type="time" required></label>
-              <label>Eigenaar<select name="owner"><option>Emilio</option><option>Ayman</option><option>Beide</option></select></label>
-              <label>Type<select name="type"><option>Meeting</option><option>Marketing</option><option>Productie</option><option>Follow-up</option><option>Content</option></select></label>
-              <button class="primary" type="submit">Afspraak opslaan</button>
-            </form>
+            <details id="appointmentDetails">
+              <summary>Nieuwe afspraak</summary>
+              <form id="eventForm" class="stack-form">
+                <label>Klant<select name="clientId" id="eventClient"></select></label>
+                <label>Titel<input name="title" placeholder="Afspraak, TikToks filmen, menu vragen..." required></label>
+                <label>Datum<input name="date" type="date" required></label>
+                <label>Tijd<input name="time" type="time" required></label>
+                <label>Eigenaar<select name="owner"><option>Emilio</option><option>Ayman</option><option>Beide</option></select></label>
+                <label>Type<select name="type"><option>Meeting</option><option>Marketing</option><option>Productie</option><option>Follow-up</option><option>Content</option></select></label>
+                <button class="primary" type="submit">Afspraak opslaan</button>
+              </form>
+            </details>
           </section>
         </div>
       </section>
@@ -338,7 +320,6 @@
               <label>Categorie<select name="type"><option>Closen</option><option>Website afmaken</option><option>TikToks filmen</option><option>Marketing</option><option>Menu/logo/branding vragen</option><option>Follow-up</option></select></label>
               <label>Eigenaar<select name="owner"><option>Emilio</option><option>Ayman</option><option>Beide</option></select></label>
               <label>Deadline<input name="due" type="date" required></label>
-              <label>Prioriteit<select name="priority"><option value="hoog">Hoog</option><option value="normaal">Normaal</option><option value="laag">Laag</option></select></label>
               <button class="primary" type="submit">Taak opslaan</button>
             </form>
           </section>
@@ -350,12 +331,12 @@
           <p class="mini">Gebaseerd op CRM patronen van Pipedrive, HubSpot, monday/ClickUp en agency workflows</p>
           <h2>Onze workflow</h2>
           <div class="workflow-grid">
-            <article><strong>1. Potentieel</strong><span>Coldcall, interesse testen, afspraak of demo vastleggen.</span></article>
-            <article><strong>2. Nieuwe klant</strong><span>Akkoord of warme afspraak. Direct vragenlijst: logo, menu, foto’s, stijl, domein.</span></article>
-            <article><strong>3. Lopend</strong><span>Website bouwen, content filmen, marketingmateriaal maken, feedback verwerken.</span></article>
-            <article><strong>4. Closen</strong><span>Demo tonen, prijs/maandbedrag afspreken, voorschot/factuur regelen.</span></article>
-            <article><strong>5. Afgerond</strong><span>Oplevering, maandelijkse opvolging, review vragen, upsell onderhoud/TikTok.</span></article>
-            <article><strong>6. Ongeïnteresseerd</strong><span>Niet blijven pushen. Zet reden erbij en plan eventueel hercontact over 60 dagen.</span></article>
+            <article><strong>1. Afspraak</strong><span>Coldcall is gelukt, demo of bezoek staat gepland.</span></article>
+            <article><strong>2. Geïnteresseerd</strong><span>Klant wil meer zien. Briefing, foto’s, menu/logo en prijsvoorstel klaarzetten.</span></article>
+            <article><strong>3. Voorschot</strong><span>Akkoord bijna rond. Voorschot/factuur regelen en productie starten.</span></article>
+            <article><strong>4. Afgerond</strong><span>Website live, maandelijkse opvolging, review vragen en upsell onderhoud/TikTok.</span></article>
+            <article><strong>5. Ongeïnteresseerd</strong><span>Niet blijven pushen. Reden noteren en eventueel later opnieuw proberen.</span></article>
+            <article><strong>6. Taken</strong><span>Alles op deadline. Binnen 4 dagen dringend, binnen 1 dag super dringend.</span></article>
           </div>
         </section>
       </section>
@@ -366,12 +347,13 @@
     <form id="clientForm" class="modal-card">
       <div class="modal-head">
         <div>
-          <p class="mini">Nieuw record</p>
-          <h2>Klant toevoegen</h2>
+          <p class="mini" id="clientModalEyebrow">Nieuw record</p>
+          <h2 id="clientModalTitle">Klant toevoegen</h2>
         </div>
         <button type="button" class="icon-btn" id="closeClientModal">Sluit</button>
       </div>
       <div class="form-grid">
+        <input type="hidden" name="id">
         <label>Bedrijf<input name="name" required placeholder="Kapsalon Jones!"></label>
         <label>Contactpersoon<input name="contact" placeholder="Mohamed"></label>
         <label>Telefoon<input name="phone" placeholder="+32..."></label>
@@ -379,15 +361,15 @@
         <label>Adres<input name="address" placeholder="Stapelhuisstraat 4/bus 101"></label>
         <label>Niche<input name="niche" placeholder="Kapsalon, restaurant..."></label>
         <label>Status<select name="status">
-          <option value="potentieel">Potentiële klant</option>
-          <option value="nieuw">Nieuwe klant</option>
-          <option value="lopend">Lopende klant</option>
-          <option value="afgerond">Afgeronde klant</option>
+          <option value="afspraak">Afspraak</option>
+          <option value="geinteresseerd">Geïnteresseerd</option>
+          <option value="voorschot">Voorschot</option>
+          <option value="afgerond">Afgerond</option>
           <option value="ongeinteresseerd">Ongeïnteresseerd</option>
         </select></label>
         <label>Eigenaar<select name="owner"><option>Emilio</option><option>Ayman</option><option>Beide</option></select></label>
-        <label>Prioriteit<select name="priority"><option value="hoog">Hoog</option><option value="normaal">Normaal</option><option value="laag">Laag</option></select></label>
         <label>Waarde €<input name="value" type="number" min="0" step="50" value="950"></label>
+        <label>Per maand €<input name="monthlyValue" type="number" min="0" step="25" value="0"></label>
         <label>Deadline<input name="deadline" type="date"></label>
         <label class="full">Volgende actie<input name="nextAction" placeholder="Demo tonen, voorschot vragen, menu opvragen..."></label>
         <label class="full">Specifieke vragen<textarea name="questions" placeholder="Menu, logo, branding, foto's, domein, social media..."></textarea></label>

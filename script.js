@@ -2,10 +2,10 @@ const STORAGE_KEY = "agency-command-center-v1";
 const THEME_KEY = "agency-command-center-theme";
 
 const statuses = [
-  ["potentieel", "Potentiële klanten"],
-  ["nieuw", "Nieuwe klanten"],
-  ["lopend", "Lopende klanten"],
-  ["afgerond", "Afgeronde klanten"],
+  ["afspraak", "Afspraak"],
+  ["geinteresseerd", "Geïnteresseerd"],
+  ["voorschot", "Voorschot"],
+  ["afgerond", "Afgerond"],
   ["ongeinteresseerd", "Ongeïnteresseerd"]
 ];
 
@@ -18,12 +18,12 @@ const iso = (offset = 0) => {
 
 const seedData = {
   clients: [
-    { id: crypto.randomUUID(), name: "Kapsalon Jones!", contact: "Jones", phone: "0475 66 25 98", address: "Stapelhuisstraat 4/bus 101", city: "Leuven", niche: "Kapsalon", status: "nieuw", owner: "Ayman", priority: "hoog", value: 950, deadline: iso(1), nextAction: "Retro demo tonen en afspraak closen", questions: "Logo, kleuren, echte salonfoto's, gewenste boekingsmethode", notes: "Wil luxe uitstraling maar makkelijk te begrijpen." },
-    { id: crypto.randomUUID(), name: "Sam Kebab", contact: "Sam", phone: "", address: "Gasthuisstraat 2", city: "Aarschot", niche: "Kebab", status: "lopend", owner: "Emilio", priority: "hoog", value: 1200, deadline: iso(2), nextAction: "Menu controleren en bestelknop bespreken", questions: "Menu, prijzen, openingsuren, delivery link", notes: "Foodsite moet snel converteren." },
-    { id: crypto.randomUUID(), name: "Café Zettanee", contact: "Caro", phone: "0468 23 45 39", address: "Bogaardenstraat 37", city: "Aarschot", niche: "Café", status: "potentieel", owner: "Ayman", priority: "normaal", value: 850, deadline: iso(4), nextAction: "Afspraak bevestigen en sfeerfoto's vragen", questions: "Drankkaart, Instagram, events, openingsuren", notes: "Meer sfeer en routekliks nodig." },
-    { id: crypto.randomUUID(), name: "BBQ Damas", contact: "", phone: "0484 30 92 80", address: "Schaluin 107", city: "Aarschot", niche: "Restaurant", status: "afgerond", owner: "Emilio", priority: "normaal", value: 1500, deadline: iso(-2), nextAction: "Onderhoud en TikTok upsell voorstellen", questions: "Nieuwe foto's en menu-updates", notes: "Referentiestijl voor foodklanten." },
-    { id: crypto.randomUUID(), name: "Bill Baguette", contact: "", phone: "016 29 74 39", address: "Liersesteenweg 39", city: "Aarschot", niche: "Broodjeszaak", status: "lopend", owner: "Ayman", priority: "normaal", value: 900, deadline: iso(3), nextAction: "Broodjeskaart opvragen", questions: "Volledige kaart, prijzen, foto’s", notes: "Lunchklanten, belknop belangrijk." },
-    { id: crypto.randomUUID(), name: "Intercoiff", contact: "", phone: "", address: "", city: "Leuven", niche: "Kapper", status: "ongeinteresseerd", owner: "Emilio", priority: "laag", value: 0, deadline: iso(60), nextAction: "Hercontact over 60 dagen", questions: "Waarom nee?", notes: "Niet pushen, later opnieuw proberen." }
+    { id: crypto.randomUUID(), name: "Kapsalon Jones!", contact: "Jones", phone: "0475 66 25 98", address: "Stapelhuisstraat 4/bus 101", city: "Leuven", niche: "Kapsalon", status: "geinteresseerd", owner: "Ayman", priority: "hoog", value: 950, monthlyValue: 75, deadline: iso(1), nextAction: "Retro demo tonen en afspraak closen", questions: "Logo, kleuren, echte salonfoto's, gewenste boekingsmethode", notes: "Wil luxe uitstraling maar makkelijk te begrijpen." },
+    { id: crypto.randomUUID(), name: "Sam Kebab", contact: "Sam", phone: "", address: "Gasthuisstraat 2", city: "Aarschot", niche: "Kebab", status: "voorschot", owner: "Emilio", priority: "hoog", value: 1200, monthlyValue: 100, deadline: iso(2), nextAction: "Menu controleren en bestelknop bespreken", questions: "Menu, prijzen, openingsuren, delivery link", notes: "Foodsite moet snel converteren." },
+    { id: crypto.randomUUID(), name: "Café Zettanee", contact: "Caro", phone: "0468 23 45 39", address: "Bogaardenstraat 37", city: "Aarschot", niche: "Café", status: "afspraak", owner: "Ayman", priority: "normaal", value: 850, monthlyValue: 50, deadline: iso(4), nextAction: "Afspraak bevestigen en sfeerfoto's vragen", questions: "Drankkaart, Instagram, events, openingsuren", notes: "Meer sfeer en routekliks nodig." },
+    { id: crypto.randomUUID(), name: "BBQ Damas", contact: "", phone: "0484 30 92 80", address: "Schaluin 107", city: "Aarschot", niche: "Restaurant", status: "afgerond", owner: "Emilio", priority: "normaal", value: 1500, monthlyValue: 150, deadline: iso(-2), nextAction: "Onderhoud en TikTok upsell voorstellen", questions: "Nieuwe foto's en menu-updates", notes: "Referentiestijl voor foodklanten." },
+    { id: crypto.randomUUID(), name: "Bill Baguette", contact: "", phone: "016 29 74 39", address: "Liersesteenweg 39", city: "Aarschot", niche: "Broodjeszaak", status: "voorschot", owner: "Ayman", priority: "normaal", value: 900, monthlyValue: 75, deadline: iso(3), nextAction: "Broodjeskaart opvragen", questions: "Volledige kaart, prijzen, foto’s", notes: "Lunchklanten, belknop belangrijk." },
+    { id: crypto.randomUUID(), name: "Intercoiff", contact: "", phone: "", address: "", city: "Leuven", niche: "Kapper", status: "ongeinteresseerd", owner: "Emilio", priority: "laag", value: 0, monthlyValue: 0, deadline: iso(60), nextAction: "Hercontact over 60 dagen", questions: "Waarom nee?", notes: "Niet pushen, later opnieuw proberen." }
   ],
   tasks: [],
   events: []
@@ -68,10 +68,11 @@ let state = load();
 let route = "dashboard";
 let query = "";
 let ownerFilter = "all";
-let priorityFilter = "all";
 const routes = ["dashboard", "pipeline", "clients", "analytics", "agenda", "tasks", "research"];
 let agendaRange = "week";
 let taskMode = "status";
+let dashboardRange = 6;
+let sidebarCollapsed = localStorage.getItem("agency-sidebar-collapsed") === "true";
 const urlTheme = new URLSearchParams(location.search).get("theme") || location.href.match(/[?&]theme=(auto|light|dark)\b/)?.[1];
 let themeMode = ["auto", "light", "dark"].includes(urlTheme) ? urlTheme : localStorage.getItem(THEME_KEY) || "light";
 const CALL_TARGET_WEEK = 60;
@@ -104,7 +105,13 @@ function migrate(data) {
     "BBQ Damas": "Schaluin 107",
     "Bill Baguette": "Liersesteenweg 39"
   };
-  data.clients = (data.clients || []).map((client) => ({ ...client, address: client.address || addressBook[client.name] || "" }));
+  const statusMap = { potentieel: "afspraak", nieuw: "geinteresseerd", lopend: "voorschot" };
+  data.clients = (data.clients || []).map((client) => ({
+    ...client,
+    status: statusMap[client.status] || client.status || "afspraak",
+    address: client.address || addressBook[client.name] || "",
+    monthlyValue: Number(client.monthlyValue || 0)
+  }));
   data.tasks ||= [];
   data.events ||= [];
   data.calls ||= [];
@@ -126,8 +133,7 @@ function filteredClients() {
     const haystack = [client.name, client.contact, client.phone, client.city, client.niche, client.owner, client.nextAction, client.notes, client.questions].join(" ").toLowerCase();
     const matchesQuery = !query || haystack.includes(query.toLowerCase());
     const matchesOwner = ownerFilter === "all" || client.owner === ownerFilter || client.owner === "Beide";
-    const matchesPriority = priorityFilter === "all" || client.priority === priorityFilter;
-    return matchesQuery && matchesOwner && matchesPriority;
+    return matchesQuery && matchesOwner;
   });
 }
 
@@ -186,34 +192,64 @@ function renderMetrics() {
     ["Open taken", openTasks, `${dueToday} dringend`],
     ["Afspraken", meetings, "komende periode"],
     ["Afgerond", won, "klanten opgeleverd"],
-    ["Hitlijst", state.clients.filter((client) => client.priority === "hoog" && client.status !== "afgerond").length, "hoge prioriteit"]
+    ["Maandelijks", money(monthlyRevenue()), "passief inkomen"]
   ];
   $("#metrics").innerHTML = metrics.map(([label, value, hint]) => `<article class="metric"><span>${label}</span><strong>${value}</strong><em>${hint}</em></article>`).join("");
 }
 
 function renderDashboard() {
-  const actions = state.tasks
-    .filter((task) => task.status !== "done")
-    .sort((a, b) => a.due.localeCompare(b.due) || priorityRank(a.priority) - priorityRank(b.priority))
-    .slice(0, 7);
-  $("#todayActions").innerHTML = actions.length ? actions.map(taskHtml).join("") : empty("Geen open taken.");
+  const keys = lastMonthKeys(dashboardRange);
+  renderLineChart("#dashboardRevenueChart", keys, keys.map((key) => sumClientsForMonth(key, (client) => client.status === "afgerond", "value")), money);
+  renderLineChart("#dashboardPassiveChart", keys, keys.map((key) => recurringAtMonth(key)), money);
+  renderLineChart("#dashboardLeadsChart", keys, keys.map((key) => state.clients.filter((client) => monthKey(client.deadline) === key && client.status !== "ongeinteresseerd").length), (value) => String(value));
+  renderLineChart("#dashboardCloseChart", keys, keys.map((key) => closeRateForMonth(key)), (value) => `${value}%`);
+}
 
-  const meetings = state.events
-    .filter((event) => event.date >= iso())
-    .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
-    .slice(0, 6);
-  $("#nextMeetings").innerHTML = meetings.length ? meetings.map(eventHtml).join("") : empty("Geen afspraken gepland.");
+function monthlyRevenue() {
+  return state.clients.filter((client) => client.status === "afgerond").reduce((sum, client) => sum + Number(client.monthlyValue || 0), 0);
+}
 
-  const health = filteredClients()
-    .filter((client) => !["afgerond", "ongeinteresseerd"].includes(client.status))
-    .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))
-    .slice(0, 8);
-  $("#healthRows").innerHTML = health.map((client) => `
-    <div class="health-row">
-      <div class="row-top"><strong>${client.name}</strong><span class="pill ${client.priority}">${client.priority}</span></div>
-      <div class="muted">${client.nextAction || "Geen volgende actie"} • ${client.owner} • deadline ${niceDate(client.deadline)}</div>
-    </div>
-  `).join("") || empty("Geen klanten in pipeline.");
+function sumClientsForMonth(key, predicate, field) {
+  return state.clients
+    .filter((client) => monthKey(client.deadline) === key && predicate(client))
+    .reduce((sum, client) => sum + Number(client[field] || 0), 0);
+}
+
+function recurringAtMonth(key) {
+  const [year, month] = key.split("-").map(Number);
+  const monthEnd = new Date(year, month, 0);
+  return state.clients
+    .filter((client) => client.status === "afgerond" && new Date(`${client.deadline || iso()}T00:00:00`) <= monthEnd)
+    .reduce((sum, client) => sum + Number(client.monthlyValue || 0), 0);
+}
+
+function closeRateForMonth(key) {
+  const clients = state.clients.filter((client) => monthKey(client.deadline) === key && client.status !== "ongeinteresseerd");
+  if (!clients.length) return 0;
+  return Math.round((clients.filter((client) => client.status === "afgerond").length / clients.length) * 100);
+}
+
+function renderLineChart(selector, keys, values, formatter) {
+  const max = Math.max(1, ...values);
+  const width = 360;
+  const height = 132;
+  const points = values.map((value, index) => {
+    const x = 18 + (index * (width - 36)) / Math.max(1, values.length - 1);
+    const y = height - 22 - (value / max) * 88;
+    return { x, y, value };
+  });
+  const line = points.map((point) => `${point.x},${point.y}`).join(" ");
+  const current = values.at(-1) || 0;
+  const previous = values.at(-2) || 0;
+  const trend = current >= previous ? "Stijgt" : "Daalt";
+  $(selector).innerHTML = `
+    <div class="line-top"><strong>${formatter(current)}</strong><span class="${current >= previous ? "trend-up" : "trend-down"}">${trend}</span></div>
+    <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="${line}" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+      ${points.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="4"></circle>`).join("")}
+    </svg>
+    <div class="line-labels">${keys.map((key) => `<span>${monthLabel(key)}</span>`).join("")}</div>
+  `;
 }
 
 function renderPipeline() {
@@ -232,10 +268,10 @@ function renderPipeline() {
 function clientCardHtml(client) {
   return `
     <article class="client-card">
-      <div class="row-top"><h4>${client.name}</h4><span class="pill ${client.priority}">${client.priority}</span></div>
+      <div class="row-top"><h4>${client.name}</h4>${ownerBadge(client.owner)}</div>
       <div class="muted">${client.niche || "-"} • ${client.city || "-"} • ${money(client.value)}</div>
       <div class="client-meta">
-        <span class="pill">${client.owner}</span>
+        <span class="pill">${statusLabel(client.status)}</span>
         <span class="pill">${client.phone || "geen tel"}</span>
       </div>
       <p class="muted">${client.nextAction || "Geen volgende actie ingesteld"}</p>
@@ -258,7 +294,7 @@ function renderClients() {
       <td>${client.nextAction || "-"}</td>
       <td>${niceDate(client.deadline)}</td>
       <td>${money(client.value)}</td>
-      <td><button class="link-btn" data-quick-task="${client.id}">Taak</button></td>
+      <td><button class="link-btn" data-edit-client="${client.id}">Bewerk</button><button class="link-btn" data-quick-task="${client.id}">Taak</button></td>
     </tr>
   `).join("") || `<tr><td colspan="7">${empty("Geen klanten gevonden.")}</td></tr>`;
 }
@@ -277,30 +313,29 @@ function renderAgenda() {
     .filter((event) => [event.title, clientById(event.clientId)?.name, event.owner, event.type].join(" ").toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
   const rangeEvents = events.filter((event) => inAgendaRange(event.date, agendaRange));
-  $("#agendaSummary").innerHTML = agendaSummaryHtml(rangeEvents);
   $("#calendarOverview").innerHTML = calendarOverviewHtml(rangeEvents);
-  $("#agendaList").innerHTML = rangeEvents.map(eventHtml).join("") || empty("Geen afspraken in deze periode.");
 }
 
 function renderTasks() {
   const tasks = state.tasks
     .filter((task) => [task.title, task.type, task.owner, clientById(task.clientId)?.name].join(" ").toLowerCase().includes(query.toLowerCase()))
-    .sort((a, b) => (a.status === "done") - (b.status === "done") || a.due.localeCompare(b.due) || priorityRank(a.priority) - priorityRank(b.priority));
+    .sort((a, b) => (a.status === "done") - (b.status === "done") || a.due.localeCompare(b.due));
   $("#taskSummary").innerHTML = taskSummaryHtml(tasks);
   $("#taskBoard").innerHTML = taskBoardHtml(tasks);
 }
 
 function taskHtml(task) {
   const client = clientById(task.clientId);
+  const urgency = taskUrgency(task);
   return `
-    <article class="task-row ${task.status}">
+    <article class="task-row ${task.status} ${urgency.className}">
       <div class="row-top">
         <div>
           <strong class="task-client">${client?.name || "Onbekend"}</strong>
           <div class="task-title">${task.title}</div>
           <div class="task-meta">${ownerBadge(task.owner)}<span>${task.type}</span><span>Deadline ${niceDate(task.due)}</span></div>
         </div>
-        <span class="pill ${task.priority}">${task.priority}</span>
+        ${urgency.label ? `<span class="urgency-badge">${urgency.label}</span>` : ""}
       </div>
       <div class="task-actions">
         <div>
@@ -320,23 +355,30 @@ function taskSummaryHtml(tasks) {
   const open = tasks.filter((task) => task.status === "open").length;
   const doing = tasks.filter((task) => task.status === "doing").length;
   const done = tasks.filter((task) => task.status === "done").length;
-  const urgent = tasks.filter((task) => task.status !== "done" && task.priority === "hoog").length;
+  const urgent = tasks.filter((task) => task.status !== "done" && daysUntil(task.due) <= 4).length;
   const overdue = tasks.filter((task) => task.status !== "done" && task.due < iso()).length;
   return [
     ["Open", open],
     ["Mee bezig", doing],
     ["Klaar", done],
-    ["Hoog", urgent],
+    ["Dringend", urgent],
     ["Te laat", overdue]
   ].map(([label, value]) => `<article><strong>${value}</strong><span>${label}</span></article>`).join("");
 }
 
 function taskBoardHtml(tasks) {
-  const groups = taskMode === "priority"
-    ? [["hoog", "Hoog"], ["normaal", "Normaal"], ["laag", "Laag"]]
-    : [["open", "Te doen"], ["doing", "Mee bezig"], ["done", "Klaar"]];
+  if (taskMode === "priority") {
+    const activeTasks = tasks.filter((task) => task.status !== "done").sort((a, b) => a.due.localeCompare(b.due));
+    return `
+      <section class="task-col task-col-wide">
+        <div class="col-head"><h3>Meest dringend eerst</h3><span class="pill">${activeTasks.length}</span></div>
+        ${activeTasks.map(taskHtml).join("") || empty("Leeg")}
+      </section>
+    `;
+  }
+  const groups = [["open", "Te doen"], ["doing", "Mee bezig"], ["done", "Klaar"]];
   return groups.map(([key, label]) => {
-    const groupTasks = tasks.filter((task) => taskMode === "priority" ? task.priority === key : task.status === key);
+    const groupTasks = tasks.filter((task) => task.status === key);
     return `
       <section class="task-col">
         <div class="col-head"><h3>${label}</h3><span class="pill">${groupTasks.length}</span></div>
@@ -344,6 +386,21 @@ function taskBoardHtml(tasks) {
       </section>
     `;
   }).join("");
+}
+
+function daysUntil(dateString) {
+  const start = new Date(`${iso()}T00:00:00`);
+  const end = new Date(`${dateString}T00:00:00`);
+  return Math.ceil((end - start) / 86400000);
+}
+
+function taskUrgency(task) {
+  if (task.status === "done") return { className: "", label: "" };
+  const days = daysUntil(task.due);
+  if (days < 0) return { className: "task-overdue", label: "Te laat" };
+  if (days <= 1) return { className: "task-super-urgent", label: "Super dringend" };
+  if (days <= 4) return { className: "task-urgent", label: "Dringend" };
+  return { className: "", label: "" };
 }
 
 function inAgendaRange(dateString, range) {
@@ -460,7 +517,7 @@ function statusLabel(key) {
 function renderAnalytics() {
   if (!$("#analyticsMetrics")) return;
   const activeClients = state.clients.filter((client) => client.status !== "ongeinteresseerd");
-  const newClients = state.clients.filter((client) => client.status === "nieuw").length;
+  const newClients = state.clients.filter((client) => client.status === "geinteresseerd").length;
   const returningClients = state.clients.filter((client) => client.status === "afgerond" && /onderhoud|upsell|review|maand|update/i.test(`${client.nextAction} ${client.notes}`)).length;
   const closedClients = state.clients.filter((client) => client.status === "afgerond").length;
   const closeRate = state.clients.length ? Math.round((closedClients / state.clients.length) * 100) : 0;
@@ -734,20 +791,16 @@ function renderCloseInsights() {
 }
 
 function renderLocalAiInsights() {
-  const urgent = state.tasks.filter((task) => task.status !== "done" && task.priority === "hoog").length;
+  const urgent = state.tasks.filter((task) => task.status !== "done" && daysUntil(task.due) <= 4).length;
   const missingQuestions = state.clients.filter((client) => !client.questions || client.questions.length < 12).length;
   const stale = state.clients.filter((client) => !["afgerond", "ongeinteresseerd"].includes(client.status) && client.deadline && client.deadline < iso()).length;
   const best = bestCloseNiche();
   $("#localAiInsights").innerHTML = [
-    [`${urgent} high-priority taken`, urgent ? "Vandaag eerst oplossen of eigenaar herverdelen." : "Geen hoge prioriteit open."],
+    [`${urgent} dringende taken`, urgent ? "Vandaag eerst oplossen of eigenaar herverdelen." : "Geen dringende taken open."],
     [`${missingQuestions} records met weinig briefing`, "Vraag menu/logo/branding/foto's voordat productie vastloopt."],
     [`${stale} klanten over deadline`, stale ? "Plan follow-up of zet status correct." : "Geen over-deadline records."],
     [`Beste niche nu: ${best.label}`, best.hint]
   ].map(([title, text]) => `<div class="insight"><strong>${title}</strong><span>${text}</span></div>`).join("");
-}
-
-function priorityRank(priority) {
-  return { hoog: 0, normaal: 1, laag: 2 }[priority] ?? 3;
 }
 
 function empty(text) {
@@ -792,6 +845,12 @@ document.addEventListener("click", (event) => {
     setRoute("tasks");
     $("#taskClient").value = quickTask.dataset.quickTask;
     $("#taskForm input[name='title']").focus();
+  }
+
+  const editClient = event.target.closest("[data-edit-client]");
+  if (editClient) {
+    const client = state.clients.find((item) => item.id === editClient.dataset.editClient);
+    if (client) openClientEditor(client);
   }
 
   const taskStatus = event.target.closest("[data-task-status]");
@@ -839,6 +898,13 @@ document.addEventListener("click", (event) => {
     renderTasks();
   }
 
+  const dashboardButton = event.target.closest("[data-dashboard-range]");
+  if (dashboardButton) {
+    dashboardRange = Number(dashboardButton.dataset.dashboardRange);
+    $$("#dashboardRangeControls button").forEach((button) => button.classList.toggle("active", button === dashboardButton));
+    renderDashboard();
+  }
+
   const themeButton = event.target.closest("[data-theme-mode]");
   if (themeButton) {
     applyTheme(themeButton.dataset.themeMode);
@@ -855,26 +921,38 @@ $("#ownerFilter").addEventListener("change", (event) => {
   render();
 });
 
-$("#priorityFilter").addEventListener("change", (event) => {
-  priorityFilter = event.target.value;
-  render();
-});
-
 $("#clearFilters").addEventListener("click", () => {
   ownerFilter = "all";
-  priorityFilter = "all";
   $("#ownerFilter").value = "all";
-  $("#priorityFilter").value = "all";
   render();
 });
 
-$("#openClientModal").addEventListener("click", () => $("#clientModal").showModal());
+function openClientEditor(client = null) {
+  const form = $("#clientForm");
+  form.reset();
+  form.elements["id"].value = client?.id || "";
+  $("#clientModalEyebrow").textContent = client ? "Record aanpassen" : "Nieuw record";
+  $("#clientModalTitle").textContent = client ? "Klant aanpassen" : "Klant toevoegen";
+  Object.entries(client || {}).forEach(([key, value]) => {
+    if (form.elements[key]) form.elements[key].value = value ?? "";
+  });
+  $("#clientModal").showModal();
+}
+
+$("#openClientModal").addEventListener("click", () => openClientEditor());
 $("#closeClientModal").addEventListener("click", () => $("#clientModal").close());
 
 $("#clientForm").addEventListener("submit", (event) => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(event.currentTarget));
-  state.clients.unshift({ id: crypto.randomUUID(), ...data, value: Number(data.value || 0) });
+  data.value = Number(data.value || 0);
+  data.monthlyValue = Number(data.monthlyValue || 0);
+  if (data.id) {
+    const client = state.clients.find((item) => item.id === data.id);
+    Object.assign(client, data);
+  } else {
+    state.clients.unshift({ ...data, id: crypto.randomUUID(), priority: "hoog" });
+  }
   save();
   event.currentTarget.reset();
   $("#clientModal").close();
@@ -884,7 +962,7 @@ $("#clientForm").addEventListener("submit", (event) => {
 $("#taskForm").addEventListener("submit", (event) => {
   event.preventDefault();
   const data = Object.fromEntries(new FormData(event.currentTarget));
-  state.tasks.unshift({ id: crypto.randomUUID(), ...data, status: "open" });
+  state.tasks.unshift({ id: crypto.randomUUID(), ...data, priority: "hoog", status: "open" });
   save();
   event.currentTarget.reset();
   render();
@@ -931,7 +1009,19 @@ $("#resetDemoBtn").addEventListener("click", () => {
   render();
 });
 
+$("#collapseSidebarBtn").addEventListener("click", () => {
+  sidebarCollapsed = !sidebarCollapsed;
+  localStorage.setItem("agency-sidebar-collapsed", String(sidebarCollapsed));
+  applySidebar();
+});
+
+function applySidebar() {
+  document.body.classList.toggle("sidebar-collapsed", sidebarCollapsed);
+  $("#collapseSidebarBtn").textContent = sidebarCollapsed ? "Open" : "Inklappen";
+}
+
 applyTheme(themeMode);
+applySidebar();
 render();
 
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
