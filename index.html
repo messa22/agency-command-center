@@ -20,6 +20,7 @@
       <button class="active" data-route="dashboard">Dashboard</button>
       <button data-route="pipeline">Pipeline</button>
       <button data-route="clients">Klanten</button>
+      <button data-route="analytics">Analytics</button>
       <button data-route="agenda">Agenda</button>
       <button data-route="tasks">Taken</button>
       <button data-route="research">Workflow</button>
@@ -133,6 +134,75 @@
         </section>
       </section>
 
+      <section id="analyticsView" class="view">
+        <div class="metric-grid analytics-metrics" id="analyticsMetrics"></div>
+        <div class="analytics-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Geografie</p>
+                <h2>Van waar komen klanten?</h2>
+              </div>
+            </div>
+            <div id="cityChart" class="bar-list"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Aanbod</p>
+                <h2>Populairste diensten</h2>
+              </div>
+            </div>
+            <div id="serviceChart" class="bar-list"></div>
+          </section>
+        </div>
+
+        <div class="analytics-grid wide-left">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Afsprakenkaart</p>
+                <h2>Map + routeplanning</h2>
+              </div>
+              <a id="routeLink" class="primary map-cta" target="_blank" rel="noreferrer">Beste route openen</a>
+            </div>
+            <div class="map-card">
+              <div class="map-surface" id="meetingMap"></div>
+              <div class="route-list" id="routeList"></div>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Conversie</p>
+                <h2>Welke klanten closen?</h2>
+              </div>
+            </div>
+            <div id="closeInsights" class="insight-list"></div>
+          </section>
+        </div>
+
+        <section class="panel ai-panel">
+          <div class="panel-head">
+            <div>
+              <p class="mini">AI Radar</p>
+              <h2>GPT-5.5 plek in het systeem</h2>
+            </div>
+            <span class="pill hoog">Backend nodig</span>
+          </div>
+          <div class="ai-grid">
+            <div>
+              <p class="muted">Deze statische versie draait gratis op GitHub Pages. Een echte live GPT-5.5 die altijd meeleest vereist een serverless backend met OpenAI API key, anders zou je sleutel zichtbaar zijn in de browser.</p>
+              <div id="localAiInsights" class="insight-list"></div>
+            </div>
+            <div class="ai-box">
+              <strong>Wat GPT straks automatisch kan herkennen</strong>
+              <span>Welke leads warm zijn, welke taken vergeten zijn, welke niche het beste sluit, welke route logisch is, welke klant nu opvolging nodig heeft en welke vragen ontbreken voor websitebouw.</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
       <section id="agendaView" class="view">
         <div class="agenda-layout">
           <section class="panel">
@@ -216,6 +286,7 @@
         <label>Contactpersoon<input name="contact" placeholder="Mohamed"></label>
         <label>Telefoon<input name="phone" placeholder="+32..."></label>
         <label>Stad<input name="city" placeholder="Leuven"></label>
+        <label>Adres<input name="address" placeholder="Stapelhuisstraat 4/bus 101"></label>
         <label>Niche<input name="niche" placeholder="Kapsalon, restaurant..."></label>
         <label>Status<select name="status">
           <option value="potentieel">Potentiële klant</option>

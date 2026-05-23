@@ -17,12 +17,12 @@ const iso = (offset = 0) => {
 
 const seedData = {
   clients: [
-    { id: crypto.randomUUID(), name: "Kapsalon Jones!", contact: "Jones", phone: "0475 66 25 98", city: "Leuven", niche: "Kapsalon", status: "nieuw", owner: "Ayman", priority: "hoog", value: 950, deadline: iso(1), nextAction: "Retro demo tonen en afspraak closen", questions: "Logo, kleuren, echte salonfoto's, gewenste boekingsmethode", notes: "Wil luxe uitstraling maar makkelijk te begrijpen." },
-    { id: crypto.randomUUID(), name: "Sam Kebab", contact: "Sam", phone: "", city: "Aarschot", niche: "Kebab", status: "lopend", owner: "Emilio", priority: "hoog", value: 1200, deadline: iso(2), nextAction: "Menu controleren en bestelknop bespreken", questions: "Menu, prijzen, openingsuren, delivery link", notes: "Foodsite moet snel converteren." },
-    { id: crypto.randomUUID(), name: "Café Zettanee", contact: "Caro", phone: "0468 23 45 39", city: "Aarschot", niche: "Café", status: "potentieel", owner: "Ayman", priority: "normaal", value: 850, deadline: iso(4), nextAction: "Afspraak bevestigen en sfeerfoto's vragen", questions: "Drankkaart, Instagram, events, openingsuren", notes: "Meer sfeer en routekliks nodig." },
-    { id: crypto.randomUUID(), name: "BBQ Damas", contact: "", phone: "0484 30 92 80", city: "Aarschot", niche: "Restaurant", status: "afgerond", owner: "Emilio", priority: "normaal", value: 1500, deadline: iso(-2), nextAction: "Onderhoud en TikTok upsell voorstellen", questions: "Nieuwe foto's en menu-updates", notes: "Referentiestijl voor foodklanten." },
-    { id: crypto.randomUUID(), name: "Bill Baguette", contact: "", phone: "016 29 74 39", city: "Aarschot", niche: "Broodjeszaak", status: "lopend", owner: "Ayman", priority: "normaal", value: 900, deadline: iso(3), nextAction: "Broodjeskaart opvragen", questions: "Volledige kaart, prijzen, foto’s", notes: "Lunchklanten, belknop belangrijk." },
-    { id: crypto.randomUUID(), name: "Intercoiff", contact: "", phone: "", city: "Leuven", niche: "Kapper", status: "ongeinteresseerd", owner: "Emilio", priority: "laag", value: 0, deadline: iso(60), nextAction: "Hercontact over 60 dagen", questions: "Waarom nee?", notes: "Niet pushen, later opnieuw proberen." }
+    { id: crypto.randomUUID(), name: "Kapsalon Jones!", contact: "Jones", phone: "0475 66 25 98", address: "Stapelhuisstraat 4/bus 101", city: "Leuven", niche: "Kapsalon", status: "nieuw", owner: "Ayman", priority: "hoog", value: 950, deadline: iso(1), nextAction: "Retro demo tonen en afspraak closen", questions: "Logo, kleuren, echte salonfoto's, gewenste boekingsmethode", notes: "Wil luxe uitstraling maar makkelijk te begrijpen." },
+    { id: crypto.randomUUID(), name: "Sam Kebab", contact: "Sam", phone: "", address: "Gasthuisstraat 2", city: "Aarschot", niche: "Kebab", status: "lopend", owner: "Emilio", priority: "hoog", value: 1200, deadline: iso(2), nextAction: "Menu controleren en bestelknop bespreken", questions: "Menu, prijzen, openingsuren, delivery link", notes: "Foodsite moet snel converteren." },
+    { id: crypto.randomUUID(), name: "Café Zettanee", contact: "Caro", phone: "0468 23 45 39", address: "Bogaardenstraat 37", city: "Aarschot", niche: "Café", status: "potentieel", owner: "Ayman", priority: "normaal", value: 850, deadline: iso(4), nextAction: "Afspraak bevestigen en sfeerfoto's vragen", questions: "Drankkaart, Instagram, events, openingsuren", notes: "Meer sfeer en routekliks nodig." },
+    { id: crypto.randomUUID(), name: "BBQ Damas", contact: "", phone: "0484 30 92 80", address: "Schaluin 107", city: "Aarschot", niche: "Restaurant", status: "afgerond", owner: "Emilio", priority: "normaal", value: 1500, deadline: iso(-2), nextAction: "Onderhoud en TikTok upsell voorstellen", questions: "Nieuwe foto's en menu-updates", notes: "Referentiestijl voor foodklanten." },
+    { id: crypto.randomUUID(), name: "Bill Baguette", contact: "", phone: "016 29 74 39", address: "Liersesteenweg 39", city: "Aarschot", niche: "Broodjeszaak", status: "lopend", owner: "Ayman", priority: "normaal", value: 900, deadline: iso(3), nextAction: "Broodjeskaart opvragen", questions: "Volledige kaart, prijzen, foto’s", notes: "Lunchklanten, belknop belangrijk." },
+    { id: crypto.randomUUID(), name: "Intercoiff", contact: "", phone: "", address: "", city: "Leuven", niche: "Kapper", status: "ongeinteresseerd", owner: "Emilio", priority: "laag", value: 0, deadline: iso(60), nextAction: "Hercontact over 60 dagen", questions: "Waarom nee?", notes: "Niet pushen, later opnieuw proberen." }
   ],
   tasks: [],
   events: []
@@ -56,6 +56,16 @@ let route = "dashboard";
 let query = "";
 let ownerFilter = "all";
 let priorityFilter = "all";
+const routes = ["dashboard", "pipeline", "clients", "analytics", "agenda", "tasks", "research"];
+const cityPositions = {
+  leuven: { x: 37, y: 70 },
+  aarschot: { x: 58, y: 45 },
+  rillaar: { x: 66, y: 39 },
+  brussel: { x: 28, y: 84 },
+  brussels: { x: 28, y: 84 },
+  mechelen: { x: 44, y: 83 },
+  tienen: { x: 50, y: 74 }
+};
 
 function load() {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -63,9 +73,23 @@ function load() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(seedData));
     return structuredClone(seedData);
   }
-  try { return JSON.parse(saved); } catch {
+  try { return migrate(JSON.parse(saved)); } catch {
     return structuredClone(seedData);
   }
+}
+
+function migrate(data) {
+  const addressBook = {
+    "Kapsalon Jones!": "Stapelhuisstraat 4/bus 101",
+    "Sam Kebab": "Gasthuisstraat 2",
+    "Café Zettanee": "Bogaardenstraat 37",
+    "BBQ Damas": "Schaluin 107",
+    "Bill Baguette": "Liersesteenweg 39"
+  };
+  data.clients = (data.clients || []).map((client) => ({ ...client, address: client.address || addressBook[client.name] || "" }));
+  data.tasks ||= [];
+  data.events ||= [];
+  return data;
 }
 
 function save() {
@@ -100,6 +124,7 @@ function setRoute(next, updateHash = true) {
     dashboard: "Dashboard",
     pipeline: "Pipeline",
     clients: "Klanten",
+    analytics: "Analytics",
     agenda: "Agenda",
     tasks: "Taken",
     research: "Workflow"
@@ -115,6 +140,7 @@ function render() {
   renderSelects();
   renderAgenda();
   renderTasks();
+  renderAnalytics();
 }
 
 function renderMetrics() {
@@ -206,9 +232,9 @@ function renderClients() {
 }
 
 function renderSelects() {
-  const options = state.clients.map((client) => `<option value="${client.id}">${client.name}</option>`).join("");
+  const options = `<option value="none">Nog geen klant / losse afspraak</option>` + state.clients.map((client) => `<option value="${client.id}">${client.name}</option>`).join("");
   $("#eventClient").innerHTML = options;
-  $("#taskClient").innerHTML = options;
+  $("#taskClient").innerHTML = state.clients.map((client) => `<option value="${client.id}">${client.name}</option>`).join("");
 }
 
 function renderAgenda() {
@@ -257,6 +283,134 @@ function eventHtml(event) {
 
 function statusLabel(key) {
   return statuses.find(([status]) => status === key)?.[1] || key;
+}
+
+function renderAnalytics() {
+  if (!$("#analyticsMetrics")) return;
+  const activeClients = state.clients.filter((client) => client.status !== "ongeinteresseerd");
+  const newClients = state.clients.filter((client) => client.status === "nieuw").length;
+  const returningClients = state.clients.filter((client) => client.status === "afgerond" && /onderhoud|upsell|review|maand|update/i.test(`${client.nextAction} ${client.notes}`)).length;
+  const closedClients = state.clients.filter((client) => client.status === "afgerond").length;
+  const closeRate = state.clients.length ? Math.round((closedClients / state.clients.length) * 100) : 0;
+  const bestNiche = bestCloseNiche();
+  const routeStops = upcomingMeetingStops();
+  const routeUrl = buildRouteUrl(routeStops);
+
+  $("#analyticsMetrics").innerHTML = [
+    ["Nieuwe klanten", newClients, "status: nieuwe klant"],
+    ["Retournerend", returningClients, "afgerond + onderhoud/upsell"],
+    ["Close rate", `${closeRate}%`, `${closedClients}/${state.clients.length} records`],
+    ["Beste niche", bestNiche.label, bestNiche.hint],
+    ["Route stops", routeStops.length, "komende afspraken"]
+  ].map(([label, value, hint]) => `<article class="metric"><span>${label}</span><strong>${value}</strong><em>${hint}</em></article>`).join("");
+
+  renderBarList("#cityChart", countBy(activeClients, "city"), activeClients.length || 1);
+  renderBarList("#serviceChart", countServices(), state.tasks.length || 1);
+  renderMeetingMap(routeStops);
+  $("#routeLink").href = routeUrl;
+  $("#routeLink").classList.toggle("disabled", !routeStops.length);
+  $("#routeList").innerHTML = routeStops.length ? routeStops.map((stop, index) => `
+    <div class="route-stop">
+      <span>${index + 1}</span>
+      <div><strong>${stop.client?.name || stop.title}</strong><em>${stop.client ? "Al klant/record" : "Nog geen klant"} • ${stop.event.date} ${stop.event.time} • ${stop.place}</em></div>
+    </div>
+  `).join("") : empty("Geen route-stops.");
+  renderCloseInsights();
+  renderLocalAiInsights();
+}
+
+function renderBarList(selector, items, total) {
+  const rows = Object.entries(items).sort((a, b) => b[1] - a[1]);
+  document.querySelector(selector).innerHTML = rows.length ? rows.map(([label, count]) => {
+    const width = Math.max(8, Math.round((count / total) * 100));
+    return `<div class="bar-row"><div><strong>${label || "Onbekend"}</strong><span>${count}</span></div><i style="width:${width}%"></i></div>`;
+  }).join("") : empty("Geen data.");
+}
+
+function countBy(items, key) {
+  return items.reduce((acc, item) => {
+    const value = item[key] || "Onbekend";
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function countServices() {
+  return state.tasks.reduce((acc, task) => {
+    acc[task.type] = (acc[task.type] || 0) + 1;
+    return acc;
+  }, {});
+}
+
+function bestCloseNiche() {
+  const grouped = {};
+  state.clients.forEach((client) => {
+    const niche = client.niche || "Onbekend";
+    grouped[niche] ||= { total: 0, closed: 0, value: 0 };
+    grouped[niche].total += 1;
+    grouped[niche].value += Number(client.value || 0);
+    if (client.status === "afgerond") grouped[niche].closed += 1;
+  });
+  const ranked = Object.entries(grouped).sort((a, b) => (b[1].closed / b[1].total) - (a[1].closed / a[1].total) || b[1].value - a[1].value);
+  if (!ranked.length) return { label: "-", hint: "geen data" };
+  const [label, data] = ranked[0];
+  return { label, hint: `${data.closed}/${data.total} gesloten` };
+}
+
+function upcomingMeetingStops() {
+  return state.events
+    .filter((event) => event.date >= iso())
+    .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
+    .map((event) => {
+      const client = clientById(event.clientId);
+      const place = client ? [client.address, client.city].filter(Boolean).join(", ") : event.title;
+      return { event, client, title: event.title, place: place || "Leuven" };
+    });
+}
+
+function buildRouteUrl(stops) {
+  if (!stops.length) return "https://www.google.com/maps";
+  const destination = encodeURIComponent(stops.at(-1).place);
+  const waypoints = stops.slice(0, -1).map((stop) => encodeURIComponent(stop.place)).join("|");
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent("Leuven")}&destination=${destination}${waypoints ? `&waypoints=${waypoints}` : ""}`;
+}
+
+function renderMeetingMap(stops) {
+  const pins = stops.map((stop, index) => {
+    const key = (stop.client?.city || "leuven").toLowerCase();
+    const pos = cityPositions[key] || { x: 48 + (index * 7) % 30, y: 48 + (index * 9) % 30 };
+    const status = stop.client ? statusLabel(stop.client.status) : "Nog geen klant";
+    return `<button class="map-pin ${stop.client ? "known" : "unknown"}" style="left:${pos.x}%;top:${pos.y}%;" title="${stop.title}"><span>${index + 1}</span><strong>${stop.client?.name || stop.title}</strong><em>${status}</em></button>`;
+  }).join("");
+  $("#meetingMap").innerHTML = `<div class="map-label">Leuven / Aarschot regio</div>${pins || `<div class="muted map-empty">Geen afspraken op de map.</div>`}`;
+}
+
+function renderCloseInsights() {
+  const grouped = {};
+  state.clients.forEach((client) => {
+    const niche = client.niche || "Onbekend";
+    grouped[niche] ||= { total: 0, closed: 0, openValue: 0 };
+    grouped[niche].total += 1;
+    if (client.status === "afgerond") grouped[niche].closed += 1;
+    if (!["afgerond", "ongeinteresseerd"].includes(client.status)) grouped[niche].openValue += Number(client.value || 0);
+  });
+  $("#closeInsights").innerHTML = Object.entries(grouped).sort((a, b) => b[1].closed - a[1].closed || b[1].openValue - a[1].openValue).map(([niche, data]) => {
+    const rate = Math.round((data.closed / data.total) * 100);
+    return `<div class="insight"><strong>${niche}</strong><span>${rate}% close • ${data.closed}/${data.total} gesloten • ${money(data.openValue)} open pipeline</span></div>`;
+  }).join("") || empty("Nog geen close-data.");
+}
+
+function renderLocalAiInsights() {
+  const urgent = state.tasks.filter((task) => task.status !== "done" && task.priority === "hoog").length;
+  const missingQuestions = state.clients.filter((client) => !client.questions || client.questions.length < 12).length;
+  const stale = state.clients.filter((client) => !["afgerond", "ongeinteresseerd"].includes(client.status) && client.deadline && client.deadline < iso()).length;
+  const best = bestCloseNiche();
+  $("#localAiInsights").innerHTML = [
+    [`${urgent} high-priority taken`, urgent ? "Vandaag eerst oplossen of eigenaar herverdelen." : "Geen hoge prioriteit open."],
+    [`${missingQuestions} records met weinig briefing`, "Vraag menu/logo/branding/foto's voordat productie vastloopt."],
+    [`${stale} klanten over deadline`, stale ? "Plan follow-up of zet status correct." : "Geen over-deadline records."],
+    [`Beste niche nu: ${best.label}`, best.hint]
+  ].map(([title, text]) => `<div class="insight"><strong>${title}</strong><span>${text}</span></div>`).join("");
 }
 
 function priorityRank(priority) {
@@ -420,12 +574,12 @@ render();
 
 window.addEventListener("hashchange", () => {
   const next = location.hash.slice(1);
-  if (["dashboard", "pipeline", "clients", "agenda", "tasks", "research"].includes(next)) {
+  if (routes.includes(next)) {
     setRoute(next, false);
   }
 });
 
 const initialRoute = location.hash.slice(1);
-if (["dashboard", "pipeline", "clients", "agenda", "tasks", "research"].includes(initialRoute)) {
+if (routes.includes(initialRoute)) {
   setRoute(initialRoute, false);
 }
