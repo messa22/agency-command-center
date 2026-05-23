@@ -57,6 +57,8 @@ let query = "";
 let ownerFilter = "all";
 let priorityFilter = "all";
 const routes = ["dashboard", "pipeline", "clients", "analytics", "agenda", "tasks", "research"];
+let agendaRange = "week";
+let taskMode = "status";
 const cityPositions = {
   leuven: { x: 37, y: 70 },
   aarschot: { x: 58, y: 45 },
@@ -241,14 +243,18 @@ function renderAgenda() {
   const events = state.events
     .filter((event) => [event.title, clientById(event.clientId)?.name, event.owner, event.type].join(" ").toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
-  $("#agendaList").innerHTML = events.map(eventHtml).join("") || empty("Geen afspraken.");
+  const rangeEvents = events.filter((event) => inAgendaRange(event.date, agendaRange));
+  $("#agendaSummary").innerHTML = agendaSummaryHtml(rangeEvents);
+  $("#calendarOverview").innerHTML = calendarOverviewHtml(rangeEvents);
+  $("#agendaList").innerHTML = rangeEvents.map(eventHtml).join("") || empty("Geen afspraken in deze periode.");
 }
 
 function renderTasks() {
   const tasks = state.tasks
     .filter((task) => [task.title, task.type, task.owner, clientById(task.clientId)?.name].join(" ").toLowerCase().includes(query.toLowerCase()))
     .sort((a, b) => (a.status === "done") - (b.status === "done") || a.due.localeCompare(b.due) || priorityRank(a.priority) - priorityRank(b.priority));
-  $("#taskList").innerHTML = tasks.map(taskHtml).join("") || empty("Geen taken.");
+  $("#taskSummary").innerHTML = taskSummaryHtml(tasks);
+  $("#taskBoard").innerHTML = taskBoardHtml(tasks);
 }
 
 function taskHtml(task) {
@@ -266,6 +272,121 @@ function taskHtml(task) {
         <button data-task-status="${task.id}" data-status="done">Klaar</button>
         <button data-delete-task="${task.id}">Delete</button>
       </div>
+    </article>
+  `;
+}
+
+function taskSummaryHtml(tasks) {
+  const open = tasks.filter((task) => task.status === "open").length;
+  const doing = tasks.filter((task) => task.status === "doing").length;
+  const done = tasks.filter((task) => task.status === "done").length;
+  const urgent = tasks.filter((task) => task.status !== "done" && task.priority === "hoog").length;
+  const overdue = tasks.filter((task) => task.status !== "done" && task.due < iso()).length;
+  return [
+    ["Open", open],
+    ["Mee bezig", doing],
+    ["Klaar", done],
+    ["Hoog", urgent],
+    ["Te laat", overdue]
+  ].map(([label, value]) => `<article><strong>${value}</strong><span>${label}</span></article>`).join("");
+}
+
+function taskBoardHtml(tasks) {
+  const groups = taskMode === "priority"
+    ? [["hoog", "Hoog"], ["normaal", "Normaal"], ["laag", "Laag"]]
+    : [["open", "Te doen"], ["doing", "Mee bezig"], ["done", "Klaar"]];
+  return groups.map(([key, label]) => {
+    const groupTasks = tasks.filter((task) => taskMode === "priority" ? task.priority === key : task.status === key);
+    return `
+      <section class="task-col">
+        <div class="col-head"><h3>${label}</h3><span class="pill">${groupTasks.length}</span></div>
+        ${groupTasks.map(taskHtml).join("") || empty("Leeg")}
+      </section>
+    `;
+  }).join("");
+}
+
+function inAgendaRange(dateString, range) {
+  const date = new Date(`${dateString}T00:00:00`);
+  const now = new Date(`${iso()}T00:00:00`);
+  const end = new Date(now);
+  if (range === "week") end.setDate(now.getDate() + 7);
+  if (range === "month") end.setMonth(now.getMonth() + 1);
+  if (range === "quarter") end.setMonth(now.getMonth() + 3);
+  if (range === "year") end.setFullYear(now.getFullYear() + 1);
+  return date >= now && date < end;
+}
+
+function agendaSummaryHtml(events) {
+  const owners = countBy(events, "owner");
+  const ownerLine = Object.entries(owners).map(([owner, count]) => `${owner}: ${count}`).join(" • ") || "Geen eigenaar";
+  const clientCount = new Set(events.map((event) => event.clientId).filter((id) => id !== "none")).size;
+  const loose = events.filter((event) => event.clientId === "none").length;
+  return `
+    <article><strong>${events.length}</strong><span>Afspraken</span></article>
+    <article><strong>${clientCount}</strong><span>Klanten</span></article>
+    <article><strong>${loose}</strong><span>Nog geen klant</span></article>
+    <article class="wide"><strong>${ownerLine}</strong><span>Verdeling</span></article>
+  `;
+}
+
+function calendarOverviewHtml(events) {
+  if (agendaRange === "week") {
+    return `<div class="week-grid">${dateBuckets(7).map(({ date, label }) => dayCard(date, label, events)).join("")}</div>`;
+  }
+  if (agendaRange === "month") {
+    return `<div class="month-grid">${dateBuckets(31).map(({ date, label }) => dayCard(date, label, events)).join("")}</div>`;
+  }
+  if (agendaRange === "quarter") {
+    return `<div class="period-grid">${monthBuckets(3).map((bucket) => monthCard(bucket, events)).join("")}</div>`;
+  }
+  return `<div class="year-grid">${monthBuckets(12).map((bucket) => monthCard(bucket, events)).join("")}</div>`;
+}
+
+function dateBuckets(days) {
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(`${iso(index)}T00:00:00`);
+    return {
+      date: date.toISOString().slice(0, 10),
+      label: new Intl.DateTimeFormat("nl-BE", { weekday: "short", day: "2-digit", month: "short" }).format(date)
+    };
+  });
+}
+
+function monthBuckets(count) {
+  return Array.from({ length: count }, (_, index) => {
+    const start = new Date(today.getFullYear(), today.getMonth() + index, 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + index + 1, 1);
+    return {
+      start,
+      end,
+      label: new Intl.DateTimeFormat("nl-BE", { month: "long", year: "numeric" }).format(start)
+    };
+  });
+}
+
+function dayCard(date, label, events) {
+  const dayEvents = events.filter((event) => event.date === date);
+  return `
+    <article class="calendar-card ${dayEvents.length ? "has-events" : ""}">
+      <strong>${label}</strong>
+      <span>${dayEvents.length} afspraken</span>
+      ${dayEvents.slice(0, 3).map((event) => `<em>${event.time} ${event.title}</em>`).join("")}
+    </article>
+  `;
+}
+
+function monthCard(bucket, events) {
+  const monthEvents = events.filter((event) => {
+    const date = new Date(`${event.date}T00:00:00`);
+    return date >= bucket.start && date < bucket.end;
+  });
+  const clientCount = new Set(monthEvents.map((event) => event.clientId).filter((id) => id !== "none")).size;
+  return `
+    <article class="calendar-card month-card ${monthEvents.length ? "has-events" : ""}">
+      <strong>${bucket.label}</strong>
+      <span>${monthEvents.length} afspraken • ${clientCount} klanten</span>
+      ${monthEvents.slice(0, 4).map((event) => `<em>${niceDate(event.date)} ${event.time} ${event.title}</em>`).join("")}
     </article>
   `;
 }
@@ -490,6 +611,20 @@ document.addEventListener("click", (event) => {
     state.events = state.events.filter((item) => item.clientId !== deleteClient.dataset.deleteClient);
     save();
     render();
+  }
+
+  const agendaButton = event.target.closest("[data-agenda-range]");
+  if (agendaButton) {
+    agendaRange = agendaButton.dataset.agendaRange;
+    $$("#agendaRangeControls button").forEach((button) => button.classList.toggle("active", button === agendaButton));
+    renderAgenda();
+  }
+
+  const taskModeButton = event.target.closest("[data-task-mode]");
+  if (taskModeButton) {
+    taskMode = taskModeButton.dataset.taskMode;
+    $$("#taskModeControls button").forEach((button) => button.classList.toggle("active", button === taskModeButton));
+    renderTasks();
   }
 });
 

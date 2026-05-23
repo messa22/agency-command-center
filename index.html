@@ -211,7 +211,16 @@
                 <p class="mini">Gedeelde planning</p>
                 <h2>Agenda</h2>
               </div>
+              <div class="segmented" id="agendaRangeControls">
+                <button class="active" data-agenda-range="week">Week</button>
+                <button data-agenda-range="month">Maand</button>
+                <button data-agenda-range="quarter">Kwartaal</button>
+                <button data-agenda-range="year">Jaar</button>
+              </div>
             </div>
+            <div id="agendaSummary" class="agenda-summary"></div>
+            <div id="calendarOverview" class="calendar-overview"></div>
+            <h3 class="subhead">Afsprakenlijst</h3>
             <div id="agendaList" class="agenda-list"></div>
           </section>
           <section class="panel sticky-panel">
@@ -237,8 +246,13 @@
                 <p class="mini">Werk dat moet gebeuren</p>
                 <h2>Taken per klant</h2>
               </div>
+              <div class="segmented" id="taskModeControls">
+                <button class="active" data-task-mode="status">Status</button>
+                <button data-task-mode="priority">Prioriteit</button>
+              </div>
             </div>
-            <div id="taskList" class="task-list"></div>
+            <div id="taskSummary" class="task-summary"></div>
+            <div id="taskBoard" class="task-board"></div>
           </section>
           <section class="panel sticky-panel">
             <p class="mini">Nieuwe taak</p>
