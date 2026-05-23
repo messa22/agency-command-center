@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agency Command Center</title>
+  <meta name="description" content="Interne CRM, pipeline en agenda voor website agency sales.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="logo" href="#dashboard" data-route="dashboard">
+      <span>AC</span>
+      <strong>Agency<br>Command</strong>
+    </a>
+    <nav class="side-nav">
+      <button class="active" data-route="dashboard">Dashboard</button>
+      <button data-route="pipeline">Pipeline</button>
+      <button data-route="clients">Klanten</button>
+      <button data-route="agenda">Agenda</button>
+      <button data-route="tasks">Taken</button>
+      <button data-route="research">Workflow</button>
+    </nav>
+    <div class="storage-card">
+      <strong>Opslag</strong>
+      <span>Lokaal in deze browser</span>
+      <button id="exportJsonBtn">Export JSON</button>
+      <label class="import-label">
+        Import JSON
+        <input id="importJsonInput" type="file" accept="application/json">
+      </label>
+    </div>
+  </aside>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Sales + productie + agenda</p>
+        <h1 id="viewTitle">Dashboard</h1>
+      </div>
+      <div class="top-actions">
+        <div class="search">
+          <span>Zoek</span>
+          <input id="globalSearch" placeholder="klant, stad, taak, eigenaar...">
+        </div>
+        <button class="ghost" id="resetDemoBtn">Demo reset</button>
+        <button class="primary" id="openClientModal">Nieuwe klant</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="dashboardView" class="view active">
+        <div class="metric-grid" id="metrics"></div>
+        <div class="dashboard-grid">
+          <section class="panel large">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Vandaag eerst</p>
+                <h2>Actielijst</h2>
+              </div>
+              <button class="link-btn" data-route="tasks">Alle taken</button>
+            </div>
+            <div id="todayActions" class="action-list"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Agenda</p>
+                <h2>Volgende afspraken</h2>
+              </div>
+              <button class="link-btn" data-route="agenda">Open agenda</button>
+            </div>
+            <div id="nextMeetings" class="meeting-list"></div>
+          </section>
+        </div>
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="mini">Pipeline gezondheid</p>
+              <h2>Waar zit geld vast?</h2>
+            </div>
+          </div>
+          <div id="healthRows" class="health-list"></div>
+        </section>
+      </section>
+
+      <section id="pipelineView" class="view">
+        <div class="filters">
+          <select id="ownerFilter">
+            <option value="all">Iedereen</option>
+            <option>Emilio</option>
+            <option>Ayman</option>
+          </select>
+          <select id="priorityFilter">
+            <option value="all">Alle prioriteiten</option>
+            <option value="hoog">Hoog</option>
+            <option value="normaal">Normaal</option>
+            <option value="laag">Laag</option>
+          </select>
+          <button class="ghost" id="clearFilters">Filters wissen</button>
+        </div>
+        <div class="pipeline-board" id="pipelineBoard"></div>
+      </section>
+
+      <section id="clientsView" class="view">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="mini">Klantenbestand</p>
+              <h2>Alles gecategoriseerd</h2>
+            </div>
+            <button class="ghost" id="exportCsvBtn">Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Klant</th>
+                  <th>Status</th>
+                  <th>Eigenaar</th>
+                  <th>Volgende actie</th>
+                  <th>Deadline</th>
+                  <th>Waarde</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="clientTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="agendaView" class="view">
+        <div class="agenda-layout">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Gedeelde planning</p>
+                <h2>Agenda</h2>
+              </div>
+            </div>
+            <div id="agendaList" class="agenda-list"></div>
+          </section>
+          <section class="panel sticky-panel">
+            <p class="mini">Nieuwe afspraak</p>
+            <form id="eventForm" class="stack-form">
+              <label>Klant<select name="clientId" id="eventClient"></select></label>
+              <label>Titel<input name="title" placeholder="Afspraak, TikToks filmen, menu vragen..." required></label>
+              <label>Datum<input name="date" type="date" required></label>
+              <label>Tijd<input name="time" type="time" required></label>
+              <label>Eigenaar<select name="owner"><option>Emilio</option><option>Ayman</option><option>Beide</option></select></label>
+              <label>Type<select name="type"><option>Meeting</option><option>Marketing</option><option>Productie</option><option>Follow-up</option><option>Content</option></select></label>
+              <button class="primary" type="submit">Afspraak opslaan</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="tasksView" class="view">
+        <div class="task-layout">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Werk dat moet gebeuren</p>
+                <h2>Taken per klant</h2>
+              </div>
+            </div>
+            <div id="taskList" class="task-list"></div>
+          </section>
+          <section class="panel sticky-panel">
+            <p class="mini">Nieuwe taak</p>
+            <form id="taskForm" class="stack-form">
+              <label>Klant<select name="clientId" id="taskClient"></select></label>
+              <label>Taak<input name="title" placeholder="Website afmaken, closen, logo vragen..." required></label>
+              <label>Categorie<select name="type"><option>Closen</option><option>Website afmaken</option><option>TikToks filmen</option><option>Marketing</option><option>Menu/logo/branding vragen</option><option>Follow-up</option></select></label>
+              <label>Eigenaar<select name="owner"><option>Emilio</option><option>Ayman</option><option>Beide</option></select></label>
+              <label>Deadline<input name="due" type="date" required></label>
+              <label>Prioriteit<select name="priority"><option value="hoog">Hoog</option><option value="normaal">Normaal</option><option value="laag">Laag</option></select></label>
+              <button class="primary" type="submit">Taak opslaan</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="researchView" class="view">
+        <section class="panel workflow">
+          <p class="mini">Gebaseerd op CRM patronen van Pipedrive, HubSpot, monday/ClickUp en agency workflows</p>
+          <h2>Onze workflow</h2>
+          <div class="workflow-grid">
+            <article><strong>1. Potentieel</strong><span>Coldcall, interesse testen, afspraak of demo vastleggen.</span></article>
+            <article><strong>2. Nieuwe klant</strong><span>Akkoord of warme afspraak. Direct vragenlijst: logo, menu, foto’s, stijl, domein.</span></article>
+            <article><strong>3. Lopend</strong><span>Website bouwen, content filmen, marketingmateriaal maken, feedback verwerken.</span></article>
+            <article><strong>4. Closen</strong><span>Demo tonen, prijs/maandbedrag afspreken, voorschot/factuur regelen.</span></article>
+            <article><strong>5. Afgerond</strong><span>Oplevering, maandelijkse opvolging, review vragen, upsell onderhoud/TikTok.</span></article>
+            <article><strong>6. Ongeïnteresseerd</strong><span>Niet blijven pushen. Zet reden erbij en plan eventueel hercontact over 60 dagen.</span></article>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="clientModal">
+    <form id="clientForm" class="modal-card">
+      <div class="modal-head">
+        <div>
+          <p class="mini">Nieuw record</p>
+          <h2>Klant toevoegen</h2>
+        </div>
+        <button type="button" class="icon-btn" id="closeClientModal">Sluit</button>
+      </div>
+      <div class="form-grid">
+        <label>Bedrijf<input name="name" required placeholder="Kapsalon Jones!"></label>
+        <label>Contactpersoon<input name="contact" placeholder="Mohamed"></label>
+        <label>Telefoon<input name="phone" placeholder="+32..."></label>
+        <label>Stad<input name="city" placeholder="Leuven"></label>
+        <label>Niche<input name="niche" placeholder="Kapsalon, restaurant..."></label>
+        <label>Status<select name="status">
+          <option value="potentieel">Potentiële klant</option>
+          <option value="nieuw">Nieuwe klant</option>
+          <option value="lopend">Lopende klant</option>
+          <option value="afgerond">Afgeronde klant</option>
+          <option value="ongeinteresseerd">Ongeïnteresseerd</option>
+        </select></label>
+        <label>Eigenaar<select name="owner"><option>Emilio</option><option>Ayman</option><option>Beide</option></select></label>
+        <label>Prioriteit<select name="priority"><option value="hoog">Hoog</option><option value="normaal">Normaal</option><option value="laag">Laag</option></select></label>
+        <label>Waarde €<input name="value" type="number" min="0" step="50" value="950"></label>
+        <label>Deadline<input name="deadline" type="date"></label>
+        <label class="full">Volgende actie<input name="nextAction" placeholder="Demo tonen, voorschot vragen, menu opvragen..."></label>
+        <label class="full">Specifieke vragen<textarea name="questions" placeholder="Menu, logo, branding, foto's, domein, social media..."></textarea></label>
+        <label class="full">Notities<textarea name="notes" placeholder="Wat is er gezegd tijdens call/afspraak?"></textarea></label>
+      </div>
+      <button class="primary" type="submit">Klant opslaan</button>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>

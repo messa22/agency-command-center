@@ -1,0 +1,431 @@
+const STORAGE_KEY = "agency-command-center-v1";
+
+const statuses = [
+  ["potentieel", "Potentiële klanten"],
+  ["nieuw", "Nieuwe klanten"],
+  ["lopend", "Lopende klanten"],
+  ["afgerond", "Afgeronde klanten"],
+  ["ongeinteresseerd", "Ongeïnteresseerd"]
+];
+
+const today = new Date();
+const iso = (offset = 0) => {
+  const date = new Date(today);
+  date.setDate(date.getDate() + offset);
+  return date.toISOString().slice(0, 10);
+};
+
+const seedData = {
+  clients: [
+    { id: crypto.randomUUID(), name: "Kapsalon Jones!", contact: "Jones", phone: "0475 66 25 98", city: "Leuven", niche: "Kapsalon", status: "nieuw", owner: "Ayman", priority: "hoog", value: 950, deadline: iso(1), nextAction: "Retro demo tonen en afspraak closen", questions: "Logo, kleuren, echte salonfoto's, gewenste boekingsmethode", notes: "Wil luxe uitstraling maar makkelijk te begrijpen." },
+    { id: crypto.randomUUID(), name: "Sam Kebab", contact: "Sam", phone: "", city: "Aarschot", niche: "Kebab", status: "lopend", owner: "Emilio", priority: "hoog", value: 1200, deadline: iso(2), nextAction: "Menu controleren en bestelknop bespreken", questions: "Menu, prijzen, openingsuren, delivery link", notes: "Foodsite moet snel converteren." },
+    { id: crypto.randomUUID(), name: "Café Zettanee", contact: "Caro", phone: "0468 23 45 39", city: "Aarschot", niche: "Café", status: "potentieel", owner: "Ayman", priority: "normaal", value: 850, deadline: iso(4), nextAction: "Afspraak bevestigen en sfeerfoto's vragen", questions: "Drankkaart, Instagram, events, openingsuren", notes: "Meer sfeer en routekliks nodig." },
+    { id: crypto.randomUUID(), name: "BBQ Damas", contact: "", phone: "0484 30 92 80", city: "Aarschot", niche: "Restaurant", status: "afgerond", owner: "Emilio", priority: "normaal", value: 1500, deadline: iso(-2), nextAction: "Onderhoud en TikTok upsell voorstellen", questions: "Nieuwe foto's en menu-updates", notes: "Referentiestijl voor foodklanten." },
+    { id: crypto.randomUUID(), name: "Bill Baguette", contact: "", phone: "016 29 74 39", city: "Aarschot", niche: "Broodjeszaak", status: "lopend", owner: "Ayman", priority: "normaal", value: 900, deadline: iso(3), nextAction: "Broodjeskaart opvragen", questions: "Volledige kaart, prijzen, foto’s", notes: "Lunchklanten, belknop belangrijk." },
+    { id: crypto.randomUUID(), name: "Intercoiff", contact: "", phone: "", city: "Leuven", niche: "Kapper", status: "ongeinteresseerd", owner: "Emilio", priority: "laag", value: 0, deadline: iso(60), nextAction: "Hercontact over 60 dagen", questions: "Waarom nee?", notes: "Niet pushen, later opnieuw proberen." }
+  ],
+  tasks: [],
+  events: []
+};
+
+seedData.tasks = [
+  task(seedData.clients[0], "Closen na demo", "Closen", "Ayman", iso(1), "hoog"),
+  task(seedData.clients[0], "Specifieke vragen verzamelen: logo/branding", "Menu/logo/branding vragen", "Emilio", iso(1), "hoog"),
+  task(seedData.clients[1], "Website afmaken en menu cards checken", "Website afmaken", "Emilio", iso(2), "hoog"),
+  task(seedData.clients[2], "TikToks filmen tijdens afspraak", "TikToks filmen", "Ayman", iso(4), "normaal"),
+  task(seedData.clients[4], "Lunchkaart en prijzen vragen", "Menu/logo/branding vragen", "Ayman", iso(3), "normaal")
+];
+
+seedData.events = [
+  event(seedData.clients[0], "Demo tonen Kapsalon Jones", "Ayman", iso(1), "12:00", "Meeting"),
+  event(seedData.clients[1], "Menu review Sam Kebab", "Emilio", iso(2), "15:30", "Productie"),
+  event(seedData.clients[2], "Afspraak + contentplan", "Ayman", iso(4), "10:30", "Marketing"),
+  event(seedData.clients[4], "Broodjeskaart ophalen", "Beide", iso(3), "14:00", "Follow-up")
+];
+
+function task(client, title, type, owner, due, priority) {
+  return { id: crypto.randomUUID(), clientId: client.id, title, type, owner, due, priority, status: "open" };
+}
+
+function event(client, title, owner, date, time, type) {
+  return { id: crypto.randomUUID(), clientId: client.id, title, owner, date, time, type, duration: 60 };
+}
+
+let state = load();
+let route = "dashboard";
+let query = "";
+let ownerFilter = "all";
+let priorityFilter = "all";
+
+function load() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedData));
+    return structuredClone(seedData);
+  }
+  try { return JSON.parse(saved); } catch {
+    return structuredClone(seedData);
+  }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
+const clientById = (id) => state.clients.find((client) => client.id === id);
+const money = (value) => new Intl.NumberFormat("nl-BE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(Number(value || 0));
+const niceDate = (value) => value ? new Intl.DateTimeFormat("nl-BE", { day: "2-digit", month: "short" }).format(new Date(value)) : "-";
+
+function filteredClients() {
+  return state.clients.filter((client) => {
+    const haystack = [client.name, client.contact, client.phone, client.city, client.niche, client.owner, client.nextAction, client.notes, client.questions].join(" ").toLowerCase();
+    const matchesQuery = !query || haystack.includes(query.toLowerCase());
+    const matchesOwner = ownerFilter === "all" || client.owner === ownerFilter || client.owner === "Beide";
+    const matchesPriority = priorityFilter === "all" || client.priority === priorityFilter;
+    return matchesQuery && matchesOwner && matchesPriority;
+  });
+}
+
+function setRoute(next, updateHash = true) {
+  route = next;
+  if (updateHash && location.hash.slice(1) !== next) {
+    history.replaceState(null, "", `#${next}`);
+  }
+  $$(".view").forEach((view) => view.classList.remove("active"));
+  $(`#${next}View`).classList.add("active");
+  $$(".side-nav button").forEach((button) => button.classList.toggle("active", button.dataset.route === next));
+  $("#viewTitle").textContent = {
+    dashboard: "Dashboard",
+    pipeline: "Pipeline",
+    clients: "Klanten",
+    agenda: "Agenda",
+    tasks: "Taken",
+    research: "Workflow"
+  }[next];
+  render();
+}
+
+function render() {
+  renderMetrics();
+  renderDashboard();
+  renderPipeline();
+  renderClients();
+  renderSelects();
+  renderAgenda();
+  renderTasks();
+}
+
+function renderMetrics() {
+  const totalValue = state.clients.filter((client) => !["afgerond", "ongeinteresseerd"].includes(client.status)).reduce((sum, client) => sum + Number(client.value || 0), 0);
+  const openTasks = state.tasks.filter((task) => task.status !== "done").length;
+  const dueToday = state.tasks.filter((task) => task.status !== "done" && task.due <= iso()).length;
+  const meetings = state.events.filter((event) => event.date >= iso()).length;
+  const won = state.clients.filter((client) => client.status === "afgerond").length;
+  const metrics = [
+    ["Pipeline waarde", money(totalValue), "Open potentiële omzet"],
+    ["Open taken", openTasks, `${dueToday} dringend`],
+    ["Afspraken", meetings, "komende periode"],
+    ["Afgerond", won, "klanten opgeleverd"],
+    ["Hitlijst", state.clients.filter((client) => client.priority === "hoog" && client.status !== "afgerond").length, "hoge prioriteit"]
+  ];
+  $("#metrics").innerHTML = metrics.map(([label, value, hint]) => `<article class="metric"><span>${label}</span><strong>${value}</strong><em>${hint}</em></article>`).join("");
+}
+
+function renderDashboard() {
+  const actions = state.tasks
+    .filter((task) => task.status !== "done")
+    .sort((a, b) => a.due.localeCompare(b.due) || priorityRank(a.priority) - priorityRank(b.priority))
+    .slice(0, 7);
+  $("#todayActions").innerHTML = actions.length ? actions.map(taskHtml).join("") : empty("Geen open taken.");
+
+  const meetings = state.events
+    .filter((event) => event.date >= iso())
+    .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`))
+    .slice(0, 6);
+  $("#nextMeetings").innerHTML = meetings.length ? meetings.map(eventHtml).join("") : empty("Geen afspraken gepland.");
+
+  const health = filteredClients()
+    .filter((client) => !["afgerond", "ongeinteresseerd"].includes(client.status))
+    .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))
+    .slice(0, 8);
+  $("#healthRows").innerHTML = health.map((client) => `
+    <div class="health-row">
+      <div class="row-top"><strong>${client.name}</strong><span class="pill ${client.priority}">${client.priority}</span></div>
+      <div class="muted">${client.nextAction || "Geen volgende actie"} • ${client.owner} • deadline ${niceDate(client.deadline)}</div>
+    </div>
+  `).join("") || empty("Geen klanten in pipeline.");
+}
+
+function renderPipeline() {
+  const clients = filteredClients();
+  $("#pipelineBoard").innerHTML = statuses.map(([key, label]) => {
+    const columnClients = clients.filter((client) => client.status === key);
+    return `
+      <section class="pipeline-col">
+        <div class="col-head"><h3>${label}</h3><span class="pill">${columnClients.length}</span></div>
+        ${columnClients.map(clientCardHtml).join("") || empty("Leeg")}
+      </section>
+    `;
+  }).join("");
+}
+
+function clientCardHtml(client) {
+  return `
+    <article class="client-card">
+      <div class="row-top"><h4>${client.name}</h4><span class="pill ${client.priority}">${client.priority}</span></div>
+      <div class="muted">${client.niche || "-"} • ${client.city || "-"} • ${money(client.value)}</div>
+      <div class="client-meta">
+        <span class="pill">${client.owner}</span>
+        <span class="pill">${client.phone || "geen tel"}</span>
+      </div>
+      <p class="muted">${client.nextAction || "Geen volgende actie ingesteld"}</p>
+      <div class="card-actions">
+        <button data-move="${client.id}" data-dir="-1">Terug</button>
+        <button data-move="${client.id}" data-dir="1">Volgende</button>
+        <button data-quick-task="${client.id}">Taak</button>
+        <button data-delete-client="${client.id}">Delete</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderClients() {
+  $("#clientTable").innerHTML = filteredClients().map((client) => `
+    <tr>
+      <td><strong>${client.name}</strong><br><span class="muted">${client.contact || "-"} • ${client.city || "-"}</span></td>
+      <td><span class="pill">${statusLabel(client.status)}</span></td>
+      <td>${client.owner}</td>
+      <td>${client.nextAction || "-"}</td>
+      <td>${niceDate(client.deadline)}</td>
+      <td>${money(client.value)}</td>
+      <td><button class="link-btn" data-quick-task="${client.id}">Taak</button></td>
+    </tr>
+  `).join("") || `<tr><td colspan="7">${empty("Geen klanten gevonden.")}</td></tr>`;
+}
+
+function renderSelects() {
+  const options = state.clients.map((client) => `<option value="${client.id}">${client.name}</option>`).join("");
+  $("#eventClient").innerHTML = options;
+  $("#taskClient").innerHTML = options;
+}
+
+function renderAgenda() {
+  const events = state.events
+    .filter((event) => [event.title, clientById(event.clientId)?.name, event.owner, event.type].join(" ").toLowerCase().includes(query.toLowerCase()))
+    .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+  $("#agendaList").innerHTML = events.map(eventHtml).join("") || empty("Geen afspraken.");
+}
+
+function renderTasks() {
+  const tasks = state.tasks
+    .filter((task) => [task.title, task.type, task.owner, clientById(task.clientId)?.name].join(" ").toLowerCase().includes(query.toLowerCase()))
+    .sort((a, b) => (a.status === "done") - (b.status === "done") || a.due.localeCompare(b.due) || priorityRank(a.priority) - priorityRank(b.priority));
+  $("#taskList").innerHTML = tasks.map(taskHtml).join("") || empty("Geen taken.");
+}
+
+function taskHtml(task) {
+  const client = clientById(task.clientId);
+  return `
+    <article class="task-row ${task.status}">
+      <div class="row-top">
+        <div><strong>${task.title}</strong><div class="muted">${client?.name || "Onbekend"} • ${task.type} • ${task.owner}</div></div>
+        <span class="pill ${task.priority}">${task.priority}</span>
+      </div>
+      <div class="muted">Deadline ${niceDate(task.due)} • status ${task.status}</div>
+      <div class="task-actions">
+        <button data-task-status="${task.id}" data-status="open">Open</button>
+        <button data-task-status="${task.id}" data-status="doing">Mee bezig</button>
+        <button data-task-status="${task.id}" data-status="done">Klaar</button>
+        <button data-delete-task="${task.id}">Delete</button>
+      </div>
+    </article>
+  `;
+}
+
+function eventHtml(event) {
+  const client = clientById(event.clientId);
+  return `
+    <article class="agenda-row meeting">
+      <div class="row-top"><strong>${event.title}</strong><span class="pill">${event.owner}</span></div>
+      <div class="muted">${niceDate(event.date)} om ${event.time} • ${event.type} • ${client?.name || "Onbekend"}</div>
+      <div class="task-actions"><button data-delete-event="${event.id}">Delete</button></div>
+    </article>
+  `;
+}
+
+function statusLabel(key) {
+  return statuses.find(([status]) => status === key)?.[1] || key;
+}
+
+function priorityRank(priority) {
+  return { hoog: 0, normaal: 1, laag: 2 }[priority] ?? 3;
+}
+
+function empty(text) {
+  return `<div class="muted">${text}</div>`;
+}
+
+function moveClient(id, dir) {
+  const client = clientById(id);
+  const current = statuses.findIndex(([key]) => key === client.status);
+  const next = Math.max(0, Math.min(statuses.length - 1, current + Number(dir)));
+  client.status = statuses[next][0];
+  save();
+  render();
+}
+
+function download(filename, content, type = "application/json") {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportCsv() {
+  const rows = [["Bedrijf", "Status", "Eigenaar", "Telefoon", "Stad", "Niche", "Volgende actie", "Deadline", "Waarde"]];
+  state.clients.forEach((client) => rows.push([client.name, statusLabel(client.status), client.owner, client.phone, client.city, client.niche, client.nextAction, client.deadline, client.value]));
+  const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
+  download("agency-klanten.csv", csv, "text/csv");
+}
+
+document.addEventListener("click", (event) => {
+  const routeButton = event.target.closest("[data-route]");
+  if (routeButton) setRoute(routeButton.dataset.route);
+
+  const moveButton = event.target.closest("[data-move]");
+  if (moveButton) moveClient(moveButton.dataset.move, moveButton.dataset.dir);
+
+  const quickTask = event.target.closest("[data-quick-task]");
+  if (quickTask) {
+    setRoute("tasks");
+    $("#taskClient").value = quickTask.dataset.quickTask;
+    $("#taskForm input[name='title']").focus();
+  }
+
+  const taskStatus = event.target.closest("[data-task-status]");
+  if (taskStatus) {
+    const item = state.tasks.find((task) => task.id === taskStatus.dataset.taskStatus);
+    item.status = taskStatus.dataset.status;
+    save();
+    render();
+  }
+
+  const deleteTask = event.target.closest("[data-delete-task]");
+  if (deleteTask) {
+    state.tasks = state.tasks.filter((task) => task.id !== deleteTask.dataset.deleteTask);
+    save();
+    render();
+  }
+
+  const deleteEvent = event.target.closest("[data-delete-event]");
+  if (deleteEvent) {
+    state.events = state.events.filter((item) => item.id !== deleteEvent.dataset.deleteEvent);
+    save();
+    render();
+  }
+
+  const deleteClient = event.target.closest("[data-delete-client]");
+  if (deleteClient && confirm("Klant verwijderen?")) {
+    state.clients = state.clients.filter((client) => client.id !== deleteClient.dataset.deleteClient);
+    state.tasks = state.tasks.filter((task) => task.clientId !== deleteClient.dataset.deleteClient);
+    state.events = state.events.filter((item) => item.clientId !== deleteClient.dataset.deleteClient);
+    save();
+    render();
+  }
+});
+
+$("#globalSearch").addEventListener("input", (event) => {
+  query = event.target.value.trim();
+  render();
+});
+
+$("#ownerFilter").addEventListener("change", (event) => {
+  ownerFilter = event.target.value;
+  render();
+});
+
+$("#priorityFilter").addEventListener("change", (event) => {
+  priorityFilter = event.target.value;
+  render();
+});
+
+$("#clearFilters").addEventListener("click", () => {
+  ownerFilter = "all";
+  priorityFilter = "all";
+  $("#ownerFilter").value = "all";
+  $("#priorityFilter").value = "all";
+  render();
+});
+
+$("#openClientModal").addEventListener("click", () => $("#clientModal").showModal());
+$("#closeClientModal").addEventListener("click", () => $("#clientModal").close());
+
+$("#clientForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(event.currentTarget));
+  state.clients.unshift({ id: crypto.randomUUID(), ...data, value: Number(data.value || 0) });
+  save();
+  event.currentTarget.reset();
+  $("#clientModal").close();
+  render();
+});
+
+$("#taskForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(event.currentTarget));
+  state.tasks.unshift({ id: crypto.randomUUID(), ...data, status: "open" });
+  save();
+  event.currentTarget.reset();
+  render();
+});
+
+$("#eventForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(event.currentTarget));
+  state.events.push({ id: crypto.randomUUID(), ...data, duration: 60 });
+  save();
+  event.currentTarget.reset();
+  render();
+});
+
+$("#exportJsonBtn").addEventListener("click", () => download("agency-command-center-backup.json", JSON.stringify(state, null, 2)));
+$("#exportCsvBtn").addEventListener("click", exportCsv);
+
+$("#importJsonInput").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const imported = JSON.parse(await file.text());
+  if (!imported.clients || !imported.tasks || !imported.events) {
+    alert("Ongeldig bestand.");
+    return;
+  }
+  state = imported;
+  save();
+  render();
+});
+
+$("#resetDemoBtn").addEventListener("click", () => {
+  if (!confirm("Demo data resetten? Je huidige lokale data wordt overschreven.")) return;
+  state = structuredClone(seedData);
+  save();
+  render();
+});
+
+render();
+
+window.addEventListener("hashchange", () => {
+  const next = location.hash.slice(1);
+  if (["dashboard", "pipeline", "clients", "agenda", "tasks", "research"].includes(next)) {
+    setRoute(next, false);
+  }
+});
+
+const initialRoute = location.hash.slice(1);
+if (["dashboard", "pipeline", "clients", "agenda", "tasks", "research"].includes(initialRoute)) {
+  setRoute(initialRoute, false);
+}
