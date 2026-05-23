@@ -43,12 +43,24 @@ seedData.events = [
   event(seedData.clients[4], "Broodjeskaart ophalen", "Beide", iso(3), "14:00", "Follow-up")
 ];
 
+seedData.calls = [
+  call(seedData.clients[0], "Ayman", iso(-1), "Afspraak gemaakt"),
+  call(seedData.clients[1], "Emilio", iso(-1), "Terugbellen"),
+  call(seedData.clients[2], "Ayman", iso(-2), "Afspraak gemaakt"),
+  call(seedData.clients[4], "Ayman", iso(-3), "Afspraak gemaakt"),
+  call(seedData.clients[5], "Emilio", iso(-4), "Niet geïnteresseerd")
+];
+
 function task(client, title, type, owner, due, priority) {
   return { id: crypto.randomUUID(), clientId: client.id, title, type, owner, due, priority, status: "open" };
 }
 
 function event(client, title, owner, date, time, type) {
   return { id: crypto.randomUUID(), clientId: client.id, title, owner, date, time, type, duration: 60 };
+}
+
+function call(client, owner, date, result) {
+  return { id: crypto.randomUUID(), clientId: client.id, owner, date, result };
 }
 
 let state = load();
@@ -59,6 +71,7 @@ let priorityFilter = "all";
 const routes = ["dashboard", "pipeline", "clients", "analytics", "agenda", "tasks", "research"];
 let agendaRange = "week";
 let taskMode = "status";
+const CALL_TARGET_WEEK = 60;
 const cityPositions = {
   leuven: { x: 37, y: 70 },
   aarschot: { x: 58, y: 45 },
@@ -91,6 +104,7 @@ function migrate(data) {
   data.clients = (data.clients || []).map((client) => ({ ...client, address: client.address || addressBook[client.name] || "" }));
   data.tasks ||= [];
   data.events ||= [];
+  data.calls ||= [];
   return data;
 }
 
@@ -237,6 +251,9 @@ function renderSelects() {
   const options = `<option value="none">Nog geen klant / losse afspraak</option>` + state.clients.map((client) => `<option value="${client.id}">${client.name}</option>`).join("");
   $("#eventClient").innerHTML = options;
   $("#taskClient").innerHTML = state.clients.map((client) => `<option value="${client.id}">${client.name}</option>`).join("");
+  if ($("#callClient")) $("#callClient").innerHTML = state.clients.map((client) => `<option value="${client.id}">${client.name}</option>`).join("");
+  const callDate = $("#callForm input[name='date']");
+  if (callDate && !callDate.value) callDate.value = iso();
 }
 
 function renderAgenda() {
@@ -413,18 +430,29 @@ function renderAnalytics() {
   const returningClients = state.clients.filter((client) => client.status === "afgerond" && /onderhoud|upsell|review|maand|update/i.test(`${client.nextAction} ${client.notes}`)).length;
   const closedClients = state.clients.filter((client) => client.status === "afgerond").length;
   const closeRate = state.clients.length ? Math.round((closedClients / state.clients.length) * 100) : 0;
+  const closedRevenue = revenueFor((client) => client.status === "afgerond");
+  const openPipeline = revenueFor((client) => !["afgerond", "ongeinteresseerd"].includes(client.status));
+  const forecast30 = revenueFor((client) => !["afgerond", "ongeinteresseerd"].includes(client.status) && isWithinDays(client.deadline, 30));
+  const averageDeal = closedClients ? Math.round(closedRevenue / closedClients) : Math.round(openPipeline / Math.max(1, activeClients.length));
+  const callsThisWeek = callsInCurrentWeek().length;
   const bestNiche = bestCloseNiche();
   const routeStops = upcomingMeetingStops();
   const routeUrl = buildRouteUrl(routeStops);
 
   $("#analyticsMetrics").innerHTML = [
-    ["Nieuwe klanten", newClients, "status: nieuwe klant"],
-    ["Retournerend", returningClients, "afgerond + onderhoud/upsell"],
-    ["Close rate", `${closeRate}%`, `${closedClients}/${state.clients.length} records`],
-    ["Beste niche", bestNiche.label, bestNiche.hint],
-    ["Route stops", routeStops.length, "komende afspraken"]
+    ["Gesloten omzet", money(closedRevenue), `${closedClients} klanten betaald/afgerond`],
+    ["Open pipeline", money(openPipeline), "nog te closen waarde"],
+    ["Forecast 30d", money(forecast30), "deals met deadline binnen 30 dagen"],
+    ["Gem. deal", money(averageDeal), "richtprijs per klant"],
+    ["Calls deze week", callsThisWeek, `${CALL_TARGET_WEEK} target`]
   ].map(([label, value, hint]) => `<article class="metric"><span>${label}</span><strong>${value}</strong><em>${hint}</em></article>`).join("");
 
+  const growth = renderRevenueTrend();
+  $("#growthBadge").textContent = growth >= 0 ? `+${growth}%` : `${growth}%`;
+  $("#growthBadge").className = `pill ${growth >= 0 ? "laag" : "hoog"}`;
+  renderSalesPulse(closeRate, bestNiche, newClients, returningClients);
+  renderEfficiencyChart();
+  renderProfitWarnings({ callsThisWeek, closeRate, openPipeline, closedRevenue, forecast30, bestNiche });
   renderBarList("#cityChart", countBy(activeClients, "city"), activeClients.length || 1);
   renderBarList("#serviceChart", countServices(), state.tasks.length || 1);
   renderMeetingMap(routeStops);
@@ -438,6 +466,156 @@ function renderAnalytics() {
   `).join("") : empty("Geen route-stops.");
   renderCloseInsights();
   renderLocalAiInsights();
+}
+
+function revenueFor(predicate) {
+  return state.clients.filter(predicate).reduce((sum, client) => sum + Number(client.value || 0), 0);
+}
+
+function monthKey(dateString) {
+  const date = new Date(`${dateString || iso()}T00:00:00`);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthLabel(key) {
+  const [year, month] = key.split("-").map(Number);
+  return new Intl.DateTimeFormat("nl-BE", { month: "short" }).format(new Date(year, month - 1, 1));
+}
+
+function lastMonthKeys(count) {
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(today.getFullYear(), today.getMonth() - (count - 1 - index), 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  });
+}
+
+function isWithinDays(dateString, days) {
+  if (!dateString) return false;
+  const start = new Date(`${iso()}T00:00:00`);
+  const end = new Date(start);
+  end.setDate(start.getDate() + days);
+  const date = new Date(`${dateString}T00:00:00`);
+  return date >= start && date <= end;
+}
+
+function renderRevenueTrend() {
+  const keys = lastMonthKeys(6);
+  const rows = keys.map((key) => {
+    const closed = state.clients
+      .filter((client) => client.status === "afgerond" && monthKey(client.deadline) === key)
+      .reduce((sum, client) => sum + Number(client.value || 0), 0);
+    const pipeline = state.clients
+      .filter((client) => !["afgerond", "ongeinteresseerd"].includes(client.status) && monthKey(client.deadline) === key)
+      .reduce((sum, client) => sum + Number(client.value || 0), 0);
+    return { key, closed, pipeline, total: closed + pipeline };
+  });
+  const max = Math.max(1, ...rows.map((row) => row.total));
+  const current = rows.at(-1)?.total || 0;
+  const previous = rows.at(-2)?.total || 0;
+  const growth = previous ? Math.round(((current - previous) / previous) * 100) : (current ? 100 : 0);
+  $("#revenueTrend").innerHTML = `
+    <div class="chart-bars">
+      ${rows.map((row) => `
+        <article>
+          <div class="bar-stack" title="${money(row.total)}">
+            <span class="bar closed" style="height:${Math.max(4, Math.round((row.closed / max) * 160))}px"></span>
+            <span class="bar pipeline" style="height:${Math.max(4, Math.round((row.pipeline / max) * 160))}px"></span>
+          </div>
+          <strong>${monthLabel(row.key)}</strong>
+          <em>${money(row.total)}</em>
+        </article>
+      `).join("")}
+    </div>
+    <div class="chart-legend"><span><i class="closed"></i>Gesloten</span><span><i class="pipeline"></i>Pipeline</span></div>
+  `;
+  return growth;
+}
+
+function callsInCurrentWeek() {
+  const start = new Date(`${iso()}T00:00:00`);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const end = new Date(start);
+  end.setDate(start.getDate() + 7);
+  return (state.calls || []).filter((item) => {
+    const date = new Date(`${item.date}T00:00:00`);
+    return date >= start && date < end;
+  });
+}
+
+function renderSalesPulse(closeRate, bestNiche, newClients, returningClients) {
+  const calls = callsInCurrentWeek();
+  const meetingsThisWeek = state.events.filter((event) => isWithinDays(event.date, 7)).length;
+  const callProgress = Math.min(100, Math.round((calls.length / CALL_TARGET_WEEK) * 100));
+  const appointmentRate = calls.length ? Math.round((meetingsThisWeek / calls.length) * 100) : 0;
+  const lastCalls = [...(state.calls || [])]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 8);
+  $("#salesPulse").innerHTML = `
+    <div class="progress-card">
+      <div><strong>${calls.length}/${CALL_TARGET_WEEK}</strong><span>calls deze week</span></div>
+      <i><b style="width:${callProgress}%"></b></i>
+      <em>${calls.length < CALL_TARGET_WEEK ? "Te weinig bellen voor consistente groei." : "Beltempo zit goed."}</em>
+    </div>
+    <div class="pulse-grid">
+      <article><strong>${meetingsThisWeek}</strong><span>afspraken 7d</span></article>
+      <article><strong>${appointmentRate}%</strong><span>call naar afspraak</span></article>
+      <article><strong>${closeRate}%</strong><span>close rate</span></article>
+      <article><strong>${bestNiche.label}</strong><span>beste niche</span></article>
+      <article><strong>${newClients}</strong><span>nieuwe klanten</span></article>
+      <article><strong>${returningClients}</strong><span>retournerend</span></article>
+    </div>
+  `;
+  $("#callHistory").innerHTML = lastCalls.map(callHtml).join("") || empty("Nog geen calls gelogd.");
+}
+
+function callHtml(item) {
+  const client = clientById(item.clientId);
+  return `<div class="call-row"><strong>${client?.name || "Onbekend"}</strong><span>${niceDate(item.date)} • ${item.owner} • ${item.result}</span></div>`;
+}
+
+function clientWorkScore(client) {
+  const tasks = state.tasks.filter((task) => task.clientId === client.id).length;
+  const events = state.events.filter((event) => event.clientId === client.id).length;
+  const calls = (state.calls || []).filter((item) => item.clientId === client.id).length;
+  return tasks * 1.5 + events * 2 + calls * 0.35;
+}
+
+function renderEfficiencyChart() {
+  const rows = state.clients
+    .filter((client) => client.status !== "ongeinteresseerd")
+    .map((client) => {
+      const work = clientWorkScore(client);
+      const value = Number(client.value || 0);
+      const hourly = Math.round(value / Math.max(1, work));
+      return { client, work, value, hourly };
+    })
+    .sort((a, b) => a.hourly - b.hourly);
+  const maxValue = Math.max(1, ...rows.map((row) => row.value));
+  $("#efficiencyChart").innerHTML = rows.map((row) => `
+    <article class="efficiency-row ${row.hourly < 350 && row.work > 2 ? "warning" : ""}">
+      <div>
+        <strong>${row.client.name}</strong>
+        <span>${money(row.value)} waarde • ${row.work.toFixed(1)} werkpunten • ${money(row.hourly)}/punt</span>
+      </div>
+      <i><b style="width:${Math.max(6, Math.round((row.value / maxValue) * 100))}%"></b></i>
+    </article>
+  `).join("") || empty("Geen klantdata.");
+}
+
+function renderProfitWarnings({ callsThisWeek, closeRate, openPipeline, closedRevenue, forecast30, bestNiche }) {
+  const lowValueWork = state.clients
+    .filter((client) => client.status !== "ongeinteresseerd")
+    .map((client) => ({ client, work: clientWorkScore(client), value: Number(client.value || 0) }))
+    .filter((item) => item.work > 3 && item.value < 1000)
+    .sort((a, b) => b.work - a.work);
+  const warnings = [];
+  if (callsThisWeek < CALL_TARGET_WEEK) warnings.push(["Te weinig bellen", `Nog ${CALL_TARGET_WEEK - callsThisWeek} calls nodig deze week. Zonder genoeg belvolume droogt de agenda op.`]);
+  if (forecast30 < 2500) warnings.push(["Forecast is dun", `${money(forecast30)} verwacht binnen 30 dagen. Zet meer leads naar afspraak of verhoog prijs.`]);
+  if (lowValueWork.length) warnings.push(["Te veel werk voor lage waarde", `${lowValueWork[0].client.name} vraagt ${lowValueWork[0].work.toFixed(1)} werkpunten voor ${money(lowValueWork[0].value)}.`]);
+  if (closeRate < 25) warnings.push(["Close rate te laag", `${closeRate}% close. Verkoopgesprek en demo moeten scherper of leads beter kwalificeren.`]);
+  if (openPipeline > closedRevenue * 2 && closedRevenue > 0) warnings.push(["Veel geld blijft open", `${money(openPipeline)} open pipeline tegenover ${money(closedRevenue)} gesloten. Focus op closen, niet alleen nieuwe demos.`]);
+  warnings.push(["Beste focus nu", `Niche ${bestNiche.label}: ${bestNiche.hint}. Bouw daar meer vergelijkbare voorbeelden voor.`]);
+  $("#profitWarnings").innerHTML = warnings.map(([title, text]) => `<div class="insight"><strong>${title}</strong><span>${text}</span></div>`).join("");
 }
 
 function renderBarList(selector, items, total) {
@@ -682,6 +860,15 @@ $("#eventForm").addEventListener("submit", (event) => {
   render();
 });
 
+$("#callForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(event.currentTarget));
+  state.calls.unshift({ id: crypto.randomUUID(), ...data });
+  save();
+  event.currentTarget.reset();
+  render();
+});
+
 $("#exportJsonBtn").addEventListener("click", () => download("agency-command-center-backup.json", JSON.stringify(state, null, 2)));
 $("#exportCsvBtn").addEventListener("click", exportCsv);
 
@@ -693,7 +880,7 @@ $("#importJsonInput").addEventListener("change", async (event) => {
     alert("Ongeldig bestand.");
     return;
   }
-  state = imported;
+  state = migrate(imported);
   save();
   render();
 });

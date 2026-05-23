@@ -136,6 +136,77 @@
 
       <section id="analyticsView" class="view">
         <div class="metric-grid analytics-metrics" id="analyticsMetrics"></div>
+
+        <div class="analytics-grid wide-left">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Omzetgroei</p>
+                <h2>Groeit onze omzet?</h2>
+              </div>
+              <span class="pill" id="growthBadge">-</span>
+            </div>
+            <div id="revenueTrend" class="combo-chart"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Bellen</p>
+                <h2>Bellen we genoeg?</h2>
+              </div>
+            </div>
+            <div id="salesPulse" class="kpi-stack"></div>
+          </section>
+        </div>
+
+        <div class="analytics-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Werkdruk vs waarde</p>
+                <h2>Werken we te veel voor te weinig?</h2>
+              </div>
+            </div>
+            <div id="efficiencyChart" class="efficiency-list"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Beslissingen</p>
+                <h2>Wat moeten we aanpassen?</h2>
+              </div>
+            </div>
+            <div id="profitWarnings" class="insight-list"></div>
+          </section>
+        </div>
+
+        <div class="analytics-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Call tracker</p>
+                <h2>Nieuwe call loggen</h2>
+              </div>
+            </div>
+            <form id="callForm" class="compact-form inline-form">
+              <label>Klant<select name="clientId" id="callClient"></select></label>
+              <label>Eigenaar<select name="owner"><option>Emilio</option><option>Ayman</option><option>Beide</option></select></label>
+              <label>Datum<input name="date" type="date" required></label>
+              <label>Resultaat<select name="result"><option>Afspraak gemaakt</option><option>Geen antwoord</option><option>Terugbellen</option><option>Niet geïnteresseerd</option><option>Geclosed</option></select></label>
+              <button class="primary" type="submit">Call loggen</button>
+            </form>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="mini">Activiteit</p>
+                <h2>Laatste calls</h2>
+              </div>
+            </div>
+            <div id="callHistory" class="call-list"></div>
+          </section>
+        </div>
+
         <div class="analytics-grid">
           <section class="panel">
             <div class="panel-head">
