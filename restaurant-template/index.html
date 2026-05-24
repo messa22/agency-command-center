@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Restaurant Template Pro</title>
+  <meta name="description" content="Premium restaurant website template met eigenaar dashboard, menu, kortingen en omzetoverzicht.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home">
+      <span>RD</span>
+      <strong>Restaurant<br>Demo</strong>
+    </a>
+    <nav>
+      <a href="#menu">Menu</a>
+      <a href="#deals">Kortingen</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="top-actions">
+      <button class="ghost" id="openAdmin">Eigenaar dashboard</button>
+      <a class="primary" href="#menu">Bestel nu</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <p class="eyebrow">Premium restaurant template</p>
+        <h1>Een menu dat verkoopt voordat iemand belt.</h1>
+        <p>Voor restaurants, kebabzaken, pizza's, broodjeszaken en grills. Elke gerechtkaart heeft een foto, prijs, korting en snelle bestelactie.</p>
+        <div class="hero-actions">
+          <a class="primary" href="#menu">Bekijk menu</a>
+          <a class="ghost" href="tel:+32123456789">Bel restaurant</a>
+        </div>
+      </div>
+      <div class="hero-board">
+        <img src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1100&q=85" alt="Gegrilde restaurant maaltijd">
+        <div class="live-card">
+          <strong>Vandaag populair</strong>
+          <span>Mixed grill menu</span>
+          <b>+32 bestellingen</b>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats-band">
+      <article><strong>4.8/5</strong><span>Google review stijl</span></article>
+      <article><strong>25 min</strong><span>Gemiddelde wachttijd</span></article>
+      <article><strong>12%</strong><span>Actieve korting</span></article>
+      <article><strong>€ 2.840</strong><span>Demo omzet vandaag</span></article>
+    </section>
+
+    <section class="section-head" id="menu">
+      <div>
+        <p class="eyebrow">Menu</p>
+        <h2>Populaire gerechten</h2>
+      </div>
+      <div class="filters" id="menuFilters">
+        <button class="active" data-filter="all">Alles</button>
+        <button data-filter="grill">Grill</button>
+        <button data-filter="pizza">Pizza</button>
+        <button data-filter="lunch">Lunch</button>
+        <button data-filter="dessert">Dessert</button>
+      </div>
+    </section>
+
+    <section class="menu-grid" id="menuGrid"></section>
+
+    <section class="deals" id="deals">
+      <div>
+        <p class="eyebrow">Kortingen</p>
+        <h2>Automatisch zichtbare acties</h2>
+        <p>De eigenaar kan in het dashboard kortingen aanzetten. De website toont ze direct in dezelfde stijl.</p>
+      </div>
+      <div id="dealCards" class="deal-grid"></div>
+    </section>
+
+    <section class="order-strip" id="contact">
+      <div>
+        <p class="eyebrow">Contact</p>
+        <h2>Bestellen of reserveren</h2>
+        <span>Open vandaag 11:00 - 23:00, demo-adres Grote Markt 12, Leuven.</span>
+      </div>
+      <div class="contact-actions">
+        <a class="primary" href="tel:+32123456789">Bel nu</a>
+        <a class="ghost" href="https://www.google.com/maps" target="_blank" rel="noreferrer">Route</a>
+      </div>
+    </section>
+  </main>
+
+  <aside class="cart" id="cart">
+    <div class="cart-head">
+      <strong>Bestelling</strong>
+      <button id="closeCart">Sluit</button>
+    </div>
+    <div id="cartItems" class="cart-items"></div>
+    <div class="cart-total">
+      <span>Totaal</span>
+      <strong id="cartTotal">€ 0</strong>
+    </div>
+    <button class="primary full-btn">Doorsturen naar WhatsApp</button>
+  </aside>
+
+  <dialog id="adminLogin">
+    <form class="login-card" id="loginForm">
+      <p class="eyebrow">Eigenaar login</p>
+      <h2>Dashboard openen</h2>
+      <p>Demo pincode: <strong>1234</strong></p>
+      <input name="pin" inputmode="numeric" placeholder="Pincode" required>
+      <button class="primary" type="submit">Open dashboard</button>
+    </form>
+  </dialog>
+
+  <section class="admin-shell" id="adminShell" aria-hidden="true">
+    <div class="admin-top">
+      <div>
+        <p class="eyebrow">Eigenaar dashboard</p>
+        <h2>Restaurant controlecentrum</h2>
+      </div>
+      <button class="ghost" id="closeAdmin">Sluiten</button>
+    </div>
+    <div class="admin-metrics" id="adminMetrics"></div>
+    <div class="admin-grid">
+      <section class="admin-panel">
+        <div class="panel-head">
+          <h3>Omzet</h3>
+          <div class="segmented" id="rangeControls">
+            <button data-range="7">7D</button>
+            <button class="active" data-range="30">30D</button>
+            <button data-range="90">90D</button>
+          </div>
+        </div>
+        <div id="revenueChart" class="revenue-chart"></div>
+      </section>
+      <section class="admin-panel">
+        <div class="panel-head"><h3>Kortingen</h3><span>Live demo</span></div>
+        <div id="discountAdmin" class="discount-admin"></div>
+      </section>
+    </div>
+    <section class="admin-panel">
+      <div class="panel-head"><h3>Menu beheer</h3><span>prijzen, beschikbaarheid, populariteit</span></div>
+      <div id="menuAdmin" class="menu-admin"></div>
+    </section>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
