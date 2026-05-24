@@ -217,7 +217,3 @@ renderMenu();
 renderDeals();
 renderCart();
 renderAdmin();
-
-if (location.hash === "#admin") {
-  openAdmin();
-}
