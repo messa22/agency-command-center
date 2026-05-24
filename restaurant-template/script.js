@@ -1,20 +1,22 @@
-const STORE_KEY = "restaurant-template-pro-state-v2";
+const STORE_KEY = "restaurant-template-pro-state-v3";
 
 const defaultDishes = [
-  { id: "mix-grill", name: "Mixed Grill Royale", category: "grill", price: 24.9, oldPrice: 28.9, orders: 32, active: true, image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=85", description: "Gegrilde kip, steak, groenten, saus en krokante aardappelen." },
-  { id: "smash-burger", name: "Smash Burger Menu", category: "lunch", price: 15.5, oldPrice: 0, orders: 28, active: true, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=85", description: "Dubbele burger, cheddar, huisgemaakte saus en frieten." },
-  { id: "pizza-diavola", name: "Pizza Diavola", category: "pizza", price: 13.9, oldPrice: 16.5, orders: 21, active: true, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=900&q=85", description: "Pittige salami, mozzarella, tomaat en verse basilicum." },
-  { id: "creamy-pasta", name: "Creamy Pasta", category: "lunch", price: 14.5, oldPrice: 0, orders: 18, active: true, image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=900&q=85", description: "Romige saus, parmezaan, champignons en gegrilde kip." },
-  { id: "chicken-bowl", name: "Chicken Bowl", category: "grill", price: 16.9, oldPrice: 19.9, orders: 16, active: true, image: "https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=900&q=85", description: "Gegrilde kip, rijst, salade, pikante saus en kruiden." },
-  { id: "fresh-salad", name: "Fresh Halloumi Salad", category: "lunch", price: 12.9, oldPrice: 0, orders: 11, active: true, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=85", description: "Krokante groenten, halloumi, noten en frisse dressing." },
-  { id: "lava-cake", name: "Chocolate Lava Cake", category: "dessert", price: 7.9, oldPrice: 9.5, orders: 14, active: true, image: "https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=900&q=85", description: "Warme chocoladetaart met zachte kern en vanille ijs." },
-  { id: "loaded-fries", name: "Loaded Fries", category: "lunch", price: 10.9, oldPrice: 0, orders: 19, active: true, image: "https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&w=900&q=85", description: "Frieten met kaas, saus, crispy kip en lente-ui." }
+  { id: "durum-shish", name: "Dürüm shish tawook", category: "wraps", price: 9.68, oldPrice: 0, orders: 42, active: true, image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?auto=format&fit=crop&w=900&q=85", description: "Gemarineerde kipspies, looksaus, sla en augurk in geroosterd Arabisch brood." },
+  { id: "tawook-schotel", name: "Shish Tawook schotel", category: "schotels", price: 18.15, oldPrice: 0, orders: 35, active: true, image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=85", description: "Kip van de grill met friet, groentesalade en huisgemaakte saus." },
+  { id: "wings", name: "Krokante Chicken Wings", category: "schotels", price: 10, oldPrice: 0, orders: 33, active: true, image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?auto=format&fit=crop&w=900&q=85", description: "Acht goudbruine wings met Belgische frieten en sweet chili dip." },
+  { id: "family-bulgur", name: "Familie BBQ bulgur", category: "bbq", price: 45.37, oldPrice: 49.9, orders: 18, active: true, image: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=900&q=85", description: "Acht spiesen gegrild vlees en kip met bulgur, friet en salade voor twee personen." },
+  { id: "family-mezze", name: "Familie BBQ mezze", category: "bbq", price: 45.37, oldPrice: 0, orders: 16, active: true, image: "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?auto=format&fit=crop&w=900&q=85", description: "Acht spiesen met hummus, moutabal, muhammara, groentesalade en friet." },
+  { id: "crispy-burger", name: "Crispy kipburger", category: "burger", price: 7.26, oldPrice: 0, orders: 29, active: true, image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=900&q=85", description: "Krokante kipburger met sla, tomaat en saus in een zacht broodje." },
+  { id: "beef-burger", name: "Classic Beef Burger", category: "burger", price: 7.26, oldPrice: 0, orders: 24, active: true, image: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=900&q=85", description: "Runderburger op brioche met cheddar, verse groenten en huisgemaakte saus." },
+  { id: "durum-shoarma", name: "Dürüm shoarma", category: "wraps", price: 7.26, oldPrice: 0, orders: 27, active: true, image: "https://images.unsplash.com/photo-1603360946369-dc9bb6258143?auto=format&fit=crop&w=900&q=85", description: "Dun gesneden gemarineerde kip, looksaus en augurken in krokant brood." },
+  { id: "falafel", name: "Dürüm falafel", category: "wraps", price: 7.26, oldPrice: 0, orders: 19, active: true, image: "https://images.unsplash.com/photo-1593001874117-c99c800e3ebc?auto=format&fit=crop&w=900&q=85", description: "Knapperige falafel, tahini, Arabische salade en augurk." },
+  { id: "tiramisu", name: "Tiramisu speculoos caramel", category: "dessert", price: 6.05, oldPrice: 0, orders: 14, active: true, image: "https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=900&q=85", description: "Romige tiramisu met speculoos, karamel en kruimels." }
 ];
 
 const defaultDiscounts = [
-  { id: "lunch", title: "Lunch deal", text: "Gratis drankje bij elk lunchmenu tot 15:00.", active: true },
-  { id: "family", title: "Familie actie", text: "10% korting vanaf 4 hoofdgerechten.", active: true },
-  { id: "student", title: "Student menu", text: "Elke woensdag extra korting op pizza en burger.", active: false }
+  { id: "delivery", title: "Gratis levering", text: "Gratis levering vanaf €15 bestelling.", active: true },
+  { id: "family", title: "Familie BBQ", text: "Acht spiesen voor twee personen vanaf €45,37.", active: true },
+  { id: "student", title: "Burger + drink", text: "Snelle actie voor studenten en lunchpauzes.", active: false }
 ];
 
 function clone(value) {
